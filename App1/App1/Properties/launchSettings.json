@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "App1": {
+      "commandName": "Project",
+      "hotReloadEnabled": false,
+      "nativeDebugging": true
+    }
+  }
+}
