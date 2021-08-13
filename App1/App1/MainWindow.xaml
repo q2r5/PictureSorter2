@@ -19,7 +19,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Margin="12,0,12,0">
-            <Button x:Name="RefreshCategoriesButton" Content="Refresh Categories" Margin="0,0,8,0"/>
+            <Button x:Name="RefreshCategoriesButton" Content="Refresh Categories" Margin="0,0,8,0" IsEnabled="False" />
             <Button x:Name="RefreshFilesButton" Content="Refresh File List" Margin="0,0,0,0" Click="RefreshFilesButton_Click" IsEnabled="False" />
         </StackPanel>
         <ListView x:Name="fileList" AllowDrop="False" Grid.Row="1" Grid.Column="0" MinWidth="150" MaxWidth="300" VerticalAlignment="Stretch" SelectionChanged="FileList_SelectionChanged" Margin="12,0,12,0" Background="{ThemeResource SystemControlAcrylicElementBrush}">
@@ -62,7 +62,7 @@
         <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.ColumnSpan="2" MaxHeight="55" VerticalAlignment="Top" Margin="12,12,0,0">
             <ComboBox x:Name="FolderList" MinWidth="200" MaxWidth="300" />
             <Button x:Name="MoveButton" Content="Move To Selected" Margin="8,0,8,0" Click="MoveButton_Click" IsEnabled="False" />
-            <Button x:Name="SortButton" Content="Sort Images" />
+            <Button x:Name="SortButton" Content="Sort Images" IsEnabled="False" />
         </StackPanel>
     </Grid>
 </Window>
