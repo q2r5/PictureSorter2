@@ -21,6 +21,8 @@ using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.Storage.Search;
+using Windows.Graphics.Imaging;
+using Windows.Storage.Streams;
 
 #if !UNIVERSAL
 using WinRT;
@@ -134,6 +136,7 @@ namespace App1
 
             MoveButton.IsEnabled = true;
             RefreshFilesButton.IsEnabled = true;
+            ConvertPNGButton.IsEnabled = true;
 
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
@@ -157,7 +160,7 @@ namespace App1
             StorageFileQueryResult result = folder.CreateFileQueryWithOptions(query);
             IReadOnlyList<StorageFile> files = await result.GetFilesAsync();
 
-            var fileList = new ObservableCollection<StorageFile>();
+            ObservableCollection<StorageFile> fileList = new();
 
             for (int i = 0; i < files.Count; i += 1)
             {
@@ -171,7 +174,7 @@ namespace App1
         {
             StorageFolderQueryResult result = folder.CreateFolderQuery();
             IReadOnlyList<StorageFolder> folders = await result.GetFoldersAsync();
-            var folderList = new ObservableCollection<StorageFolder>();
+            ObservableCollection<StorageFolder> folderList = new();
             for (int i = 0; i < folders.Count; i += 1)
             {
                 folderList.Add(folders[i]);
@@ -208,6 +211,47 @@ namespace App1
             files = await GetFiles(CurrentFolder, filteredFileTypes);
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
+        }
+
+        private async void ConvertPNGButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentFile.FileType == "png")
+            {
+                return;
+            }
+
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(await currentFile.OpenReadAsync());
+            SoftwareBitmap bitmap = await decoder.GetSoftwareBitmapAsync();
+
+            await currentFile.RenameAsync(currentFile.DisplayName + ".bak", NameCollisionOption.GenerateUniqueName);
+            StorageFile newFile = await CurrentFolder.CreateFileAsync(currentFile.DisplayName.Split(".")[0] + ".png");
+
+            using IRandomAccessStream stream = await newFile.OpenAsync(FileAccessMode.ReadWrite);
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+            encoder.SetSoftwareBitmap(bitmap);
+            encoder.IsThumbnailGenerated = true;
+
+            try
+            {
+                await encoder.FlushAsync();
+            }
+            catch (Exception err)
+            {
+                const int WINCODEC_ERR_UNSUPPORTED_OPERATION = unchecked((int)0x88982F81);
+                switch (err.HResult)
+                {
+                    case WINCODEC_ERR_UNSUPPORTED_OPERATION:
+                        encoder.IsThumbnailGenerated = false;
+                        break;
+                    default:
+                        throw;
+                }
+            }
+
+            if (encoder.IsThumbnailGenerated == false)
+            {
+                await encoder.FlushAsync();
+            }
         }
     }
 }
