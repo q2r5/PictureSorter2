@@ -48,6 +48,8 @@ namespace App1
 
             hwnd = WinRT.Interop.WindowNative.GetWindowHandle(m_window);
 
+            m_window.Title = "(New) Picture Sorter";
+
 #if UNIVERSAL
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
 #endif
