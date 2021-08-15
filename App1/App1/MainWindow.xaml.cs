@@ -1,22 +1,12 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Contacts;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
@@ -33,7 +23,7 @@ using WinRT;
 
 namespace App1
 {
-    [ComImport, System.Runtime.InteropServices.Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [ComImport, Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IInitializeWithWindow
     {
         void Initialize([In] IntPtr hwnd);
@@ -46,7 +36,7 @@ namespace App1
     {
         private StorageFolder CurrentFolder
         {
-            get { return _currentFolder; }
+            get => _currentFolder;
             set
             {
                 if (_currentFolder != value)
@@ -58,15 +48,14 @@ namespace App1
         }
 
         private StorageFolder _currentFolder;
-
-        List<string> filteredFileTypes;
+        private List<string> filteredFileTypes;
         private ObservableCollection<StorageFile> files;
         private ObservableCollection<StorageFolder> folders;
         private StorageFile currentFile;
 
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private async void PickFolderButton_Click(object sender, RoutedEventArgs e)
@@ -85,7 +74,7 @@ namespace App1
 
 #if !UNIVERSAL
             // When running on win32, FileOpenPicker needs to know the top-level hwnd via IInitializeWithWindow::Initialize.
-            if (Window.Current == null)
+            if (Current == null)
             {
                 IInitializeWithWindow initializeWithWindowWrapper = folderPicker.As<IInitializeWithWindow>();
                 IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -96,33 +85,33 @@ namespace App1
             CurrentFolder = await folderPicker.PickSingleFolderAsync();
         }
 
-//        private async void PickFile()
-//        {
-//            FileOpenPicker filePicker = new()
-//            {
-//                SuggestedStartLocation = PickerLocationId.Desktop
-//            };
-//            filteredFileTypes = filterTypesBox.Text.Split(",").ToList();
-//            foreach (string fileType in filteredFileTypes)
-//            {
-//                filePicker.FileTypeFilter.Add(fileType);
-//            }
+        //        private async void PickFile()
+        //        {
+        //            FileOpenPicker filePicker = new()
+        //            {
+        //                SuggestedStartLocation = PickerLocationId.Desktop
+        //            };
+        //            filteredFileTypes = filterTypesBox.Text.Split(",").ToList();
+        //            foreach (string fileType in filteredFileTypes)
+        //            {
+        //                filePicker.FileTypeFilter.Add(fileType);
+        //            }
 
-//#if !UNIVERSAL
-//            // When running on win32, FileOpenPicker needs to know the top-level hwnd via IInitializeWithWindow::Initialize.
-//            if (Window.Current == null)
-//            {
-//                IInitializeWithWindow initializeWithWindowWrapper = filePicker.As<IInitializeWithWindow>();
-//                IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-//                initializeWithWindowWrapper.Initialize(hwnd);
-//            }
-//#endif
+        //#if !UNIVERSAL
+        //            // When running on win32, FileOpenPicker needs to know the top-level hwnd via IInitializeWithWindow::Initialize.
+        //            if (Window.Current == null)
+        //            {
+        //                IInitializeWithWindow initializeWithWindowWrapper = filePicker.As<IInitializeWithWindow>();
+        //                IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        //                initializeWithWindowWrapper.Initialize(hwnd);
+        //            }
+        //#endif
 
-//            currentFile = await filePicker.PickSingleFileAsync();
-//            Uri uri = new(currentFile.Path);
-//            BitmapImage image = new(uri);
-//            ImagePreview.Source = image;
-//        }
+        //            currentFile = await filePicker.PickSingleFileAsync();
+        //            Uri uri = new(currentFile.Path);
+        //            BitmapImage image = new(uri);
+        //            ImagePreview.Source = image;
+        //        }
 
         private async void FolderChanged()
         {
@@ -136,7 +125,7 @@ namespace App1
 
             MoveButton.IsEnabled = true;
             RefreshFilesButton.IsEnabled = true;
-            ConvertPNGButton.IsEnabled = true;
+            ConvertButton.IsEnabled = true;
 
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
@@ -152,7 +141,7 @@ namespace App1
             files = await GetFiles(CurrentFolder, filteredFileTypes);
         }
 
-        private async Task<ObservableCollection<StorageFile>> GetFiles(StorageFolder folder, List<string> filteredFileTypes)
+        private static async Task<ObservableCollection<StorageFile>> GetFiles(StorageFolder folder, List<string> filteredFileTypes)
         {
             QueryOptions query = new(CommonFileQuery.OrderByName, filteredFileTypes);
             query.FolderDepth = FolderDepth.Shallow;
@@ -170,7 +159,7 @@ namespace App1
             return fileList;
         }
 
-        private async Task<ObservableCollection<StorageFolder>> GetFolders(StorageFolder folder)
+        private static async Task<ObservableCollection<StorageFolder>> GetFolders(StorageFolder folder)
         {
             StorageFolderQueryResult result = folder.CreateFolderQuery();
             IReadOnlyList<StorageFolder> folders = await result.GetFoldersAsync();
@@ -191,15 +180,23 @@ namespace App1
             Uri uri = new(currentFile.Path);
             BitmapImage image = new(uri);
             ImagePreview.Source = image;
+
+            string fileType = currentFile.FileType.ToUpperInvariant().Replace(".", "");
+            if (fileType == "JPG") { fileType = "JPEG"; }
+
+            foreach (MenuFlyoutItemBase item in ConvertMenu.Items)
+            {
+                item.Visibility = ((MenuFlyoutItem)item).Tag.ToString() == fileType ? Visibility.Collapsed : Visibility.Visible;
+            }
         }
 
         private async void MoveButton_Click(object sender, RoutedEventArgs e)
         {
             if (fileList.SelectedIndex == -1 || FolderList.SelectedIndex == -1) { return; }
 
-            var folder = folders[FolderList.SelectedIndex];
+            StorageFolder folder = folders[FolderList.SelectedIndex];
 
-            var selectedIndex = fileList.SelectedIndex;
+            int selectedIndex = fileList.SelectedIndex;
 
             await currentFile.MoveAsync(folder);
             files.RemoveAt(selectedIndex);
@@ -213,21 +210,41 @@ namespace App1
             fileList.SelectedIndex = 0;
         }
 
-        private async void ConvertPNGButton_Click(object sender, RoutedEventArgs e)
+        private async void ConvertOption_Click(object sender, RoutedEventArgs e)
         {
-            if (currentFile.FileType == "png")
+            string option = ((MenuFlyoutItem)sender).Tag.ToString();
+            string extension = "";
+            Guid encoderID = new();
+
+            if (option == "PNG")
             {
-                return;
+                encoderID = BitmapEncoder.PngEncoderId;
+                extension = ".png";
+            }
+            else if (option == "JPEG")
+            {
+                encoderID = BitmapEncoder.JpegEncoderId;
+                extension = ".jpg";
+            }
+            else if (option == "GIF")
+            {
+                encoderID = BitmapEncoder.GifEncoderId;
+                extension = ".gif";
+            }
+            else if (option == "HEIF")
+            {
+                encoderID = BitmapEncoder.HeifEncoderId;
+                extension = ".heif";
             }
 
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(await currentFile.OpenReadAsync());
             SoftwareBitmap bitmap = await decoder.GetSoftwareBitmapAsync();
 
             await currentFile.RenameAsync(currentFile.DisplayName + ".bak", NameCollisionOption.GenerateUniqueName);
-            StorageFile newFile = await CurrentFolder.CreateFileAsync(currentFile.DisplayName.Split(".")[0] + ".png");
+            StorageFile newFile = await CurrentFolder.CreateFileAsync(currentFile.DisplayName.Split(".")[0] + extension);
 
             using IRandomAccessStream stream = await newFile.OpenAsync(FileAccessMode.ReadWrite);
-            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(encoderID, stream);
             encoder.SetSoftwareBitmap(bitmap);
             encoder.IsThumbnailGenerated = true;
 

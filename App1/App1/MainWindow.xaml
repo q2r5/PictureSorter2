@@ -62,7 +62,16 @@
         <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.ColumnSpan="2" MaxHeight="55" VerticalAlignment="Top" Margin="12,12,0,0">
             <ComboBox x:Name="FolderList" MinWidth="200" MaxWidth="300" />
             <Button x:Name="MoveButton" Content="Move To Selected" Margin="8,0,8,0" Click="MoveButton_Click" IsEnabled="False" />
-            <Button x:Name="ConvertPNGButton" Content="PNG" Click="ConvertPNGButton_Click" IsEnabled="False" />
+            <DropDownButton x:Name="ConvertButton" Content="Convert" IsEnabled="False">
+                <DropDownButton.Flyout>
+                    <MenuFlyout x:Name="ConvertMenu">
+                        <MenuFlyoutItem Text="PNG" Tag="PNG" Click="ConvertOption_Click" />
+                        <MenuFlyoutItem Text="JPEG" Tag="JPEG" Click="ConvertOption_Click" />
+                        <MenuFlyoutItem Text="GIF" Tag="GIF" Click="ConvertOption_Click" />
+                        <MenuFlyoutItem Text="HEIF" Tag="HEIF" Click="ConvertOption_Click" />
+                    </MenuFlyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
         </StackPanel>
     </Grid>
 </Window>
