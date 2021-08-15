@@ -183,10 +183,14 @@ namespace App1
 
             string fileType = currentFile.FileType.ToUpperInvariant().Replace(".", "");
             if (fileType == "JPG") { fileType = "JPEG"; }
+            else if (fileType == "WDP") { fileType = "JXR"; }
 
             foreach (MenuFlyoutItemBase item in ConvertMenu.Items)
             {
-                item.Visibility = ((MenuFlyoutItem)item).Tag.ToString() == fileType ? Visibility.Collapsed : Visibility.Visible;
+                if (item.Tag != null)
+                {
+                    item.Visibility = item.Tag.ToString() == fileType ? Visibility.Collapsed : Visibility.Visible;
+                }
             }
         }
 
@@ -235,6 +239,10 @@ namespace App1
             {
                 encoderID = BitmapEncoder.HeifEncoderId;
                 extension = ".heif";
+            } else if (option == "JXR")
+            {
+                encoderID = BitmapEncoder.JpegXREncoderId;
+                extension = ".jxr";
             }
 
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(await currentFile.OpenReadAsync());

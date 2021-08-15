@@ -68,7 +68,9 @@
                         <MenuFlyoutItem Text="PNG" Tag="PNG" Click="ConvertOption_Click" />
                         <MenuFlyoutItem Text="JPEG" Tag="JPEG" Click="ConvertOption_Click" />
                         <MenuFlyoutItem Text="GIF" Tag="GIF" Click="ConvertOption_Click" />
+                        <MenuFlyoutSeparator />
                         <MenuFlyoutItem Text="HEIF" Tag="HEIF" Click="ConvertOption_Click" />
+                        <MenuFlyoutItem Text="JPEG-XR" Tag="JXR" Click="ConvertOption_Click" />
                     </MenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
