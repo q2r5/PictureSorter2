@@ -41,6 +41,7 @@ namespace App1
             {
                 if (_currentFolder != value)
                 {
+                    appData.Values["path"] = value.Path;
                     _currentFolder = value;
                     FolderChanged();
                 }
@@ -48,14 +49,33 @@ namespace App1
         }
 
         private StorageFolder _currentFolder;
-        private List<string> filteredFileTypes;
+        private List<string> FilteredFileTypes
+        {
+            get => ((string)appData.Values["fileTypes"] ?? ".jpg,.png,.bmp,.gif").Split(",").ToList();
+            set => appData.Values["fileTypes"] = string.Join(",", value);
+        }
         private ObservableCollection<StorageFile> files;
         private ObservableCollection<StorageFolder> folders;
         private StorageFile currentFile;
 
+        private readonly ApplicationDataContainer appData = ApplicationData.Current.LocalSettings;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            if (FilteredFileTypes == null)
+            {
+                FilteredFileTypes = ".jpg,.png,.bmp,.gif".Split(",").ToList();
+            } else
+            {
+                filterTypesBox.Text = string.Join(",", FilteredFileTypes);
+            }
+
+            if (appData.Values["path"] != null)
+            {
+                CurrentFolder = StorageFolder.GetFolderFromPathAsync((string)appData.Values["path"]).GetAwaiter().GetResult();
+            }
         }
 
         private async void PickFolderButton_Click(object sender, RoutedEventArgs e)
@@ -65,9 +85,7 @@ namespace App1
                 SuggestedStartLocation = PickerLocationId.Desktop
             };
 
-            filteredFileTypes = filterTypesBox.Text.Split(",").ToList();
-
-            foreach (string fileType in filteredFileTypes)
+            foreach (string fileType in FilteredFileTypes)
             {
                 folderPicker.FileTypeFilter.Add(fileType);
             }
@@ -120,7 +138,7 @@ namespace App1
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", CurrentFolder);
             filePathBox.Text = CurrentFolder.Path;
 
-            files = await GetFiles(CurrentFolder, filteredFileTypes);
+            files = await GetFiles(CurrentFolder, FilteredFileTypes);
             folders = await GetFolders(CurrentFolder);
 
             MoveButton.IsEnabled = true;
@@ -133,12 +151,14 @@ namespace App1
             FolderList.ItemsSource = folders;
             FolderList.DisplayMemberPath = "Name";
             FolderList.SelectedIndex = 0;
+
+            CategoryGrid.ItemsSource = folders;
         }
 
         private async void FilterButton_Click(object sender, RoutedEventArgs e)
         {
-            filteredFileTypes = filterTypesBox.Text.Split(",").ToList();
-            files = await GetFiles(CurrentFolder, filteredFileTypes);
+            FilteredFileTypes = filterTypesBox.Text.Split(",").ToList();
+            files = await GetFiles(CurrentFolder, FilteredFileTypes);
         }
 
         private static async Task<ObservableCollection<StorageFile>> GetFiles(StorageFolder folder, List<string> filteredFileTypes)
@@ -209,7 +229,7 @@ namespace App1
 
         private async void RefreshFilesButton_Click(object sender, RoutedEventArgs e)
         {
-            files = await GetFiles(CurrentFolder, filteredFileTypes);
+            files = await GetFiles(CurrentFolder, FilteredFileTypes);
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
         }
@@ -277,6 +297,18 @@ namespace App1
             {
                 await encoder.FlushAsync();
             }
+        }
+
+        private async void NewCategoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            NewCategoryButton.Flyout.Hide();
+            _ = await CurrentFolder.CreateFolderAsync(NewCatName.Text, CreationCollisionOption.GenerateUniqueName);
+            folders = await GetFolders(CurrentFolder);
+        }
+
+        private void NewCatName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            NewCatAddButton.IsEnabled = NewCatName.Text.Length != 0;
         }
     }
 }
