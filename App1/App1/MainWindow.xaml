@@ -20,7 +20,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Margin="12,0,12,0">
-            <Button x:Name="RefreshCategoriesButton" Content="Refresh Categories" Margin="0,0,8,0" IsEnabled="False" />
+            <Button x:Name="RefreshCategoriesButton" Content="Refresh Categories" Margin="0,0,8,0" Click="RefreshCategoriesButton_Click" IsEnabled="False" />
             <Button x:Name="RefreshFilesButton" Content="Refresh File List" Margin="0,0,0,0" Click="RefreshFilesButton_Click" IsEnabled="False" />
         </StackPanel>
         <ListView x:Name="fileList" AllowDrop="False" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" MinWidth="150" MaxWidth="300" VerticalAlignment="Stretch" SelectionChanged="FileList_SelectionChanged" Margin="12,0,12,0" Background="{ThemeResource SystemControlAcrylicElementBrush}">
@@ -48,10 +48,21 @@
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
             <AppBarSeparator />
-            <TextBox x:Name="filterTypesBox" Header="File Types" Text=".jpg,.png,.bmp,.gif"  MinWidth="300" Margin="0,0,0,8" />
-            <AppBarButton Icon="Filter" Label="Filter" Click="FilterButton_Click" />
+            <AppBarButton Icon="Filter" Label="Filter">
+                <AppBarButton.Flyout>
+                    <MenuFlyout x:Name="FilterMenu" Closed="FilterMenu_Closed">
+                        <ToggleMenuFlyoutItem Text="PNG" Tag=".png" Click="ToggleMenuFlyoutItem_Click" />
+                        <ToggleMenuFlyoutItem Text="JPEG" Tag=".jpg" Click="ToggleMenuFlyoutItem_Click" />
+                        <ToggleMenuFlyoutItem Text="GIF" Tag=".gif" Click="ToggleMenuFlyoutItem_Click" />
+                        <MenuFlyoutSeparator />
+                        <ToggleMenuFlyoutItem Text="HEIF" Tag=".heif" Click="ToggleMenuFlyoutItem_Click" />
+                        <ToggleMenuFlyoutItem Text="JPEG-XR" Tag=".jxr" Click="ToggleMenuFlyoutItem_Click" />
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
         </StackPanel>
         <Border Grid.Row="1" Grid.Column="1"
+                Grid.RowSpan="2"
                                 Background="{ThemeResource SystemControlAcrylicElementBrush}"
                                 VerticalAlignment="Top" 
                                 HorizontalAlignment="Left" 
@@ -82,7 +93,8 @@
                       IsItemClickEnabled="True"
                       CanDragItems="False"
                       AllowDrop="False"
-                      FlowDirection="LeftToRight">
+                      FlowDirection="LeftToRight"
+                      ItemClick="CategoryGrid_ItemClick">
                 <GridView.ItemTemplate>
                     <DataTemplate x:DataType="ws:StorageFolder">
                         <StackPanel Width = '240' Orientation = 'Horizontal'>

@@ -49,11 +49,19 @@ namespace App1
         }
 
         private StorageFolder _currentFolder;
-        private List<string> FilteredFileTypes
+        private HashSet<string> FilteredFileTypes
         {
-            get => ((string)appData.Values["fileTypes"] ?? ".jpg,.png,.bmp,.gif").Split(",").ToList();
-            set => appData.Values["fileTypes"] = string.Join(",", value);
+            get => _filteredFileTypes;
+            set
+            {
+                if (_filteredFileTypes != value)
+                {
+                    appData.Values["fileTypes"] = string.Join(",", value);
+                    _filteredFileTypes = value;
+                }
+            }
         }
+        private HashSet<string> _filteredFileTypes;
         private ObservableCollection<StorageFile> files;
         private ObservableCollection<StorageFolder> folders;
         private StorageFile currentFile;
@@ -64,12 +72,16 @@ namespace App1
         {
             InitializeComponent();
 
-            if (FilteredFileTypes == null)
+            FilteredFileTypes = ((string)appData.Values["fileTypes"] ?? ".jpg,.png,.gif").Split(",").ToHashSet();
+            foreach (string fileType in FilteredFileTypes)
             {
-                FilteredFileTypes = ".jpg,.png,.bmp,.gif".Split(",").ToList();
-            } else
-            {
-                filterTypesBox.Text = string.Join(",", FilteredFileTypes);
+                foreach (MenuFlyoutItemBase item in FilterMenu.Items)
+                {
+                    if (item.Tag != null && item.Tag.ToString() == fileType)
+                    {
+                        (item as ToggleMenuFlyoutItem).IsChecked = true;
+                    }
+                }
             }
 
             if (appData.Values["path"] != null)
@@ -103,34 +115,6 @@ namespace App1
             CurrentFolder = await folderPicker.PickSingleFolderAsync();
         }
 
-        //        private async void PickFile()
-        //        {
-        //            FileOpenPicker filePicker = new()
-        //            {
-        //                SuggestedStartLocation = PickerLocationId.Desktop
-        //            };
-        //            filteredFileTypes = filterTypesBox.Text.Split(",").ToList();
-        //            foreach (string fileType in filteredFileTypes)
-        //            {
-        //                filePicker.FileTypeFilter.Add(fileType);
-        //            }
-
-        //#if !UNIVERSAL
-        //            // When running on win32, FileOpenPicker needs to know the top-level hwnd via IInitializeWithWindow::Initialize.
-        //            if (Window.Current == null)
-        //            {
-        //                IInitializeWithWindow initializeWithWindowWrapper = filePicker.As<IInitializeWithWindow>();
-        //                IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        //                initializeWithWindowWrapper.Initialize(hwnd);
-        //            }
-        //#endif
-
-        //            currentFile = await filePicker.PickSingleFileAsync();
-        //            Uri uri = new(currentFile.Path);
-        //            BitmapImage image = new(uri);
-        //            ImagePreview.Source = image;
-        //        }
-
         private async void FolderChanged()
         {
             if (CurrentFolder == null) { return; }
@@ -138,10 +122,11 @@ namespace App1
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", CurrentFolder);
             filePathBox.Text = CurrentFolder.Path;
 
-            files = await GetFiles(CurrentFolder, FilteredFileTypes);
+            files = await GetFiles(CurrentFolder);
             folders = await GetFolders(CurrentFolder);
 
             MoveButton.IsEnabled = true;
+            RefreshCategoriesButton.IsEnabled = true;
             RefreshFilesButton.IsEnabled = true;
             ConvertButton.IsEnabled = true;
 
@@ -155,15 +140,9 @@ namespace App1
             CategoryGrid.ItemsSource = folders;
         }
 
-        private async void FilterButton_Click(object sender, RoutedEventArgs e)
+        private async Task<ObservableCollection<StorageFile>> GetFiles(StorageFolder folder)
         {
-            FilteredFileTypes = filterTypesBox.Text.Split(",").ToList();
-            files = await GetFiles(CurrentFolder, FilteredFileTypes);
-        }
-
-        private static async Task<ObservableCollection<StorageFile>> GetFiles(StorageFolder folder, List<string> filteredFileTypes)
-        {
-            QueryOptions query = new(CommonFileQuery.OrderByName, filteredFileTypes);
+            QueryOptions query = new(CommonFileQuery.OrderByName, fileTypeFilter: FilteredFileTypes);
             query.FolderDepth = FolderDepth.Shallow;
             query.IndexerOption = IndexerOption.UseIndexerWhenAvailable;
             StorageFileQueryResult result = folder.CreateFileQueryWithOptions(query);
@@ -220,16 +199,12 @@ namespace App1
 
             StorageFolder folder = folders[FolderList.SelectedIndex];
 
-            int selectedIndex = fileList.SelectedIndex;
-
-            await currentFile.MoveAsync(folder);
-            files.RemoveAt(selectedIndex);
-            fileList.SelectedIndex = selectedIndex;
+            await MoveFile(currentFile, folder);
         }
 
         private async void RefreshFilesButton_Click(object sender, RoutedEventArgs e)
         {
-            files = await GetFiles(CurrentFolder, FilteredFileTypes);
+            files = await GetFiles(CurrentFolder);
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
         }
@@ -309,6 +284,39 @@ namespace App1
         private void NewCatName_TextChanged(object sender, TextChangedEventArgs e)
         {
             NewCatAddButton.IsEnabled = NewCatName.Text.Length != 0;
+        }
+
+        private async void CategoryGrid_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            await MoveFile(currentFile, e.ClickedItem as StorageFolder);
+        }
+
+        private async Task MoveFile(StorageFile file, StorageFolder folder)
+        {
+            int selectedIndex = fileList.SelectedIndex;
+            await file.MoveAsync(folder);
+            _ = files.Remove(file);
+            fileList.SelectedIndex = selectedIndex;
+        }
+
+        private async void RefreshCategoriesButton_Click(object sender, RoutedEventArgs e)
+        {
+            folders = await GetFolders(CurrentFolder);
+        }
+
+        private void ToggleMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleMenuFlyoutItem item = sender as ToggleMenuFlyoutItem;
+            string optionTag = item.Tag.ToString();
+
+            _ = item.IsChecked ? FilteredFileTypes.Add(optionTag) : FilteredFileTypes.Remove(optionTag);
+        }
+
+        private async void FilterMenu_Closed(object sender, object e)
+        {
+            files = await GetFiles(CurrentFolder);
+            fileList.ItemsSource = files;
+            fileList.SelectedIndex = 0;
         }
     }
 }
