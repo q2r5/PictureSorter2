@@ -71,7 +71,7 @@ namespace App1
 
         private readonly ApplicationDataContainer appData = ApplicationData.Current.LocalSettings;
 
-        private HashSet<(StorageFile, StorageFolder)> recentCommands = new();
+        private (StorageFile, StorageFolder) lastCommand;
 
         public MainWindow()
         {
@@ -133,8 +133,7 @@ namespace App1
             folders = await GetFolders(CurrentFolder);
 
             MoveButton.IsEnabled = true;
-            RefreshCategoriesButton.IsEnabled = true;
-            RefreshFilesButton.IsEnabled = true;
+            RefreshButton.IsEnabled = true;
             ConvertButton.IsEnabled = true;
             NewCategoryButton.IsEnabled = true;
 
@@ -314,7 +313,9 @@ namespace App1
             await file.MoveAsync(folder);
             _ = files.Remove(file);
             fileList.SelectedIndex = selectedIndex;
-            _ = recentCommands.Add((file, folder));
+            lastCommand = (file, folder);
+            if (UndoButton.IsEnabled) { UndoButton.IsEnabled = false; RedoButton.IsEnabled = true; }
+            else { UndoButton.IsEnabled = true; RedoButton.IsEnabled = false; }
         }
 
         private async void RefreshCategoriesButton_Click(object sender, RoutedEventArgs e)
@@ -344,14 +345,8 @@ namespace App1
             fileList.SelectedIndex = 0;
         }
 
-        private bool CanUndo()
-        {
-            return recentCommands != null && recentCommands.Count > 0;
-        }
-
         private async void Undo(object sender, RoutedEventArgs e)
         {
-            (StorageFile, StorageFolder) lastCommand = recentCommands.Last();
             if (files.Contains(lastCommand.Item1)) { return; }
             await MoveFile(lastCommand.Item1, CurrentFolder);
             int index = fileList.SelectedIndex;
@@ -362,7 +357,6 @@ namespace App1
 
         private async void Redo(object sender, RoutedEventArgs e)
         {
-            (StorageFile, StorageFolder) lastCommand = recentCommands.Last();
             await MoveFile(lastCommand.Item1, lastCommand.Item2);
             files = await GetFiles(CurrentFolder);
             int index = fileList.SelectedIndex;

@@ -61,7 +61,7 @@
                 BorderThickness="1">
             <Image x:Name="ImagePreview" Stretch="Uniform" />
         </Border>
-        <CommandBar Grid.Row="4" Grid.ColumnSpan="2" DefaultLabelPosition="Right" Margin="0,12,0,0">
+        <CommandBar Grid.Row="4" Grid.ColumnSpan="2" Margin="0,12,0,0">
             <CommandBar.Content>
                 <ComboBox x:Name="FolderList" MaxWidth="300" Margin="4"/>
             </CommandBar.Content>
@@ -84,15 +84,21 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Name="RefreshCategoriesButton" Icon="Refresh" Label="Refresh Categories" Margin="0,0,8,0" Click="RefreshCategoriesButton_Click" IsEnabled="False">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control,Shift" Key="R" />
-                    </AppBarButton.KeyboardAccelerators>
-                </AppBarButton>
-                <AppBarButton x:Name="RefreshFilesButton" Icon="Refresh" Label="Refresh Files" Margin="0,0,0,0" Click="RefreshFilesButton_Click" IsEnabled="False">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="R" />
-                    </AppBarButton.KeyboardAccelerators>
+                <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" ToolTipService.ToolTip="Refresh" IsEnabled="False">
+                    <AppBarButton.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem x:Name="RefreshFilesButton" Icon="Pictures" Text="Refresh Files" Click="RefreshFilesButton_Click">
+                                <MenuFlyoutItem.KeyboardAccelerators>
+                                    <KeyboardAccelerator Modifiers="Control" Key="R" />
+                                </MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="RefreshCategoriesButton" Icon="Folder" Text="Refresh Categories" Click="RefreshCategoriesButton_Click">
+                                <MenuFlyoutItem.KeyboardAccelerators>
+                                    <KeyboardAccelerator Modifiers="Control,Shift" Key="R" />
+                                </MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
                 <AppBarButton x:Name="MoveButton" Icon="MoveToFolder" Label="Move To Selected" Click="MoveButton_Click" ToolTipService.ToolTip="Move To Selected" IsEnabled="False" />
@@ -121,20 +127,19 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-            </CommandBar.PrimaryCommands>
-            <CommandBar.SecondaryCommands>
-                <AppBarButton x:Name="UndoButton" Label="Undo" Icon="Undo" Click="Undo">
+                <AppBarSeparator />
+                <AppBarButton x:Name="UndoButton" Label="Undo" Icon="Undo" Click="Undo" IsEnabled="False">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="Z" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton x:Name="RedoButton" Label="Redo" Icon="Redo" Click="Redo">
+                <AppBarButton x:Name="RedoButton" Label="Redo" Icon="Redo" Click="Redo" IsEnabled="False">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="Y" />
                         <KeyboardAccelerator Modifiers="Control,Shift" Key="Z" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-            </CommandBar.SecondaryCommands>
+            </CommandBar.PrimaryCommands>
         </CommandBar>
         <GridView x:Name="CategoryGrid"
                   Grid.Row="3"
@@ -158,14 +163,6 @@
                     </StackPanel>
                 </DataTemplate>
             </GridView.ItemTemplate>
-
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsWrapGrid x:Name="MaxItemsWrapGrid" 
-                           MaximumRowsOrColumns="4"
-                           Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
         </GridView>
     </Grid>
 </Window>
