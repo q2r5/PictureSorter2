@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows10.0.22000.0</TargetFramework>
     <UseWindowsSdkPreview>true</UseWindowsSdkPreview>
-    <WindowsSdkPackageVersion>10.0.22000.132-preview</WindowsSdkPackageVersion>
+    <WindowsSdkPackageVersion>10.0.22000.160-preview</WindowsSdkPackageVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>App1</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>

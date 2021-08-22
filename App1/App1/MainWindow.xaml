@@ -8,22 +8,32 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="LayoutRoot" Margin="12">
+    <Grid x:Name="LayoutRoot">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*"/>
+            <RowDefinition />
             <RowDefinition />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Margin="12,0,12,0">
-            <Button x:Name="RefreshCategoriesButton" Content="Refresh Categories" Margin="0,0,8,0" Click="RefreshCategoriesButton_Click" IsEnabled="False" />
-            <Button x:Name="RefreshFilesButton" Content="Refresh File List" Margin="0,0,0,0" Click="RefreshFilesButton_Click" IsEnabled="False" />
-        </StackPanel>
-        <ListView x:Name="fileList" AllowDrop="False" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" MinWidth="150" MaxWidth="300" VerticalAlignment="Stretch" SelectionChanged="FileList_SelectionChanged" Margin="12,0,12,0" Background="{ThemeResource SystemControlAcrylicElementBrush}">
+        <TextBlock x:Name="FolderHeader"
+                   Style="{ThemeResource SubheaderTextBlockStyle}"
+                   Margin="12,0,0,8"/>
+        <ListView x:Name="fileList"
+                  AllowDrop="False"
+                  Grid.Row="1"
+                  Grid.Column="0"
+                  Grid.RowSpan="3" 
+                  MinWidth="150" 
+                  MaxWidth="300"
+                  VerticalAlignment="Stretch"
+                  SelectionChanged="FileList_SelectionChanged"
+                  Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                  Margin="12,0,12,0">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="ws:StorageFile">
                     <Grid Margin="0,12,0,12" AutomationProperties.Name="{x:Bind DisplayName}">
@@ -34,96 +44,128 @@
                         <Image Source="{x:Bind Path}" Height="50" Width="50" />
 
                         <StackPanel Margin="12,0,0,0" Grid.Column="1" >
-                            <TextBlock Text="{x:Bind DisplayName}" FontFamily="Segoe UI" FontSize="14" FontWeight="SemiBold" Style="{ThemeResource BaseTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,6" LineHeight="20"/>
+                            <TextBlock Text="{x:Bind DisplayName}" FontSize="14" FontWeight="SemiBold" Style="{ThemeResource BaseTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,6" LineHeight="20"/>
                         </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
-            <TextBox x:Name="filePathBox" Header="Base Path" MinWidth="450" Margin="0,0,0,8" />
-            <AppBarButton Icon="OpenLocal" Label="Open" Click="PickFolderButton_Click">
-                <AppBarButton.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control" Key="O" />
-                </AppBarButton.KeyboardAccelerators>
-            </AppBarButton>
-            <AppBarSeparator />
-            <AppBarButton Icon="Filter" Label="Filter">
-                <AppBarButton.Flyout>
-                    <MenuFlyout x:Name="FilterMenu" Closed="FilterMenu_Closed">
-                        <ToggleMenuFlyoutItem Text="PNG" Tag=".png" Click="ToggleMenuFlyoutItem_Click" />
-                        <ToggleMenuFlyoutItem Text="JPEG" Tag=".jpg" Click="ToggleMenuFlyoutItem_Click" />
-                        <ToggleMenuFlyoutItem Text="GIF" Tag=".gif" Click="ToggleMenuFlyoutItem_Click" />
-                        <MenuFlyoutSeparator />
-                        <ToggleMenuFlyoutItem Text="HEIF" Tag=".heif" Click="ToggleMenuFlyoutItem_Click" />
-                        <ToggleMenuFlyoutItem Text="JPEG-XR" Tag=".jxr" Click="ToggleMenuFlyoutItem_Click" />
-                    </MenuFlyout>
-                </AppBarButton.Flyout>
-            </AppBarButton>
-        </StackPanel>
-        <Border Grid.Row="1" Grid.Column="1"
-                Grid.RowSpan="2"
-                                Background="{ThemeResource SystemControlAcrylicElementBrush}"
-                                VerticalAlignment="Top" 
-                                HorizontalAlignment="Left" 
-                                Margin="16" 
-                                CornerRadius="8"
-                                BorderThickness="1">
+        <Border Grid.Row="0" Grid.Column="1"
+                Grid.RowSpan="3"
+                Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                VerticalAlignment="Stretch" 
+                HorizontalAlignment="Stretch"
+                Margin="0,12,12,0"
+                Padding="8"
+                CornerRadius="8"
+                BorderThickness="1">
             <Image x:Name="ImagePreview" Stretch="Uniform" />
         </Border>
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.ColumnSpan="2" Grid.RowSpan="2" MaxHeight="100" VerticalAlignment="Top" Margin="12,12,0,0">
-            <ComboBox x:Name="FolderList" MinWidth="200" MaxWidth="300" />
-            <Button x:Name="MoveButton" Content="Move To Selected" Margin="8,0,4,0" Click="MoveButton_Click" IsEnabled="False" />
-            <Button x:Name="NewCategoryButton" Content="Add Category" Margin="4,0,4,0">
-                <Button.Flyout>
-                    <Flyout>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox x:Name="NewCatName" Header="Category Name" MinWidth="300" MaxLength="255" TextChanged="NewCatName_TextChanged" />
-                            <Button x:Name="NewCatAddButton" Content="OK" Margin="8,0,0,0" VerticalAlignment="Bottom" Click="NewCategoryButton_Click" IsEnabled="False" />
-                        </StackPanel>
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
-            <GridView x:Name="CategoryGrid"
-                      Margin="4,0,4,0"
-                      Background="{ThemeResource SystemControlAcrylicElementBrush}" 
-                      HorizontalAlignment="Stretch" 
-                      MinWidth="400"
+        <CommandBar Grid.Row="4" Grid.ColumnSpan="2" DefaultLabelPosition="Right" Margin="0,12,0,0">
+            <CommandBar.Content>
+                <ComboBox x:Name="FolderList" MaxWidth="300" Margin="4"/>
+            </CommandBar.Content>
+            <CommandBar.PrimaryCommands>
+                <AppBarButton Icon="OpenLocal" Label="Open" Click="PickFolderButton_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Filter" Label="Filter" ToolTipService.ToolTip="Filter">
+                    <AppBarButton.Flyout>
+                        <MenuFlyout x:Name="FilterMenu" Closed="FilterMenu_Closed">
+                            <ToggleMenuFlyoutItem Text="PNG" Tag=".png" Click="ToggleMenuFlyoutItem_Click" />
+                            <ToggleMenuFlyoutItem Text="JPEG" Tag=".jpg" Click="ToggleMenuFlyoutItem_Click" />
+                            <ToggleMenuFlyoutItem Text="GIF" Tag=".gif" Click="ToggleMenuFlyoutItem_Click" />
+                            <MenuFlyoutSeparator />
+                            <ToggleMenuFlyoutItem Text="HEIF" Tag=".heif" Click="ToggleMenuFlyoutItem_Click" />
+                            <ToggleMenuFlyoutItem Text="JPEG-XR" Tag=".jxr" Click="ToggleMenuFlyoutItem_Click" />
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarSeparator />
+                <AppBarButton x:Name="RefreshCategoriesButton" Icon="Refresh" Label="Refresh Categories" Margin="0,0,8,0" Click="RefreshCategoriesButton_Click" IsEnabled="False">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="R" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton x:Name="RefreshFilesButton" Icon="Refresh" Label="Refresh Files" Margin="0,0,0,0" Click="RefreshFilesButton_Click" IsEnabled="False">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="R" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarSeparator />
+                <AppBarButton x:Name="MoveButton" Icon="MoveToFolder" Label="Move To Selected" Click="MoveButton_Click" ToolTipService.ToolTip="Move To Selected" IsEnabled="False" />
+                <AppBarButton x:Name="NewCategoryButton" Icon="NewFolder" Label="New Category" IsEnabled="False">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N" />
+                    </AppBarButton.KeyboardAccelerators>
+                    <AppBarButton.Flyout>
+                        <Flyout>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="NewCatName" Header="Category Name" MinWidth="300" MaxLength="255" TextChanged="NewCatName_TextChanged" KeyDown="NewCatName_KeyDown" />
+                                <Button x:Name="NewCatAddButton" Content="OK" Margin="8,0,0,0" VerticalAlignment="Bottom" Click="NewCategoryButton_Click" IsEnabled="False" />
+                            </StackPanel>
+                        </Flyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarButton x:Name="ConvertButton" Icon="Sync" Label="Convert" ToolTipService.ToolTip="Convert" IsEnabled="False">
+                    <AppBarButton.Flyout>
+                        <MenuFlyout x:Name="ConvertMenu">
+                            <MenuFlyoutItem Text="PNG" Tag="PNG" Click="ConvertOption_Click" />
+                            <MenuFlyoutItem Text="JPEG" Tag="JPEG" Click="ConvertOption_Click" />
+                            <MenuFlyoutItem Text="GIF" Tag="GIF" Click="ConvertOption_Click" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="HEIF" Tag="HEIF" Click="ConvertOption_Click" />
+                            <MenuFlyoutItem Text="JPEG-XR" Tag="JXR" Click="ConvertOption_Click" />
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Name="UndoButton" Label="Undo" Icon="Undo" Click="Undo">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Z" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton x:Name="RedoButton" Label="Redo" Icon="Redo" Click="Redo">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Y" />
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="Z" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+        <GridView x:Name="CategoryGrid"
+                  Grid.Row="3"
+                  Grid.Column="1"
+                  Margin="0,12,12,0"
+                  VerticalAlignment="Bottom"
+                  Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                  MinWidth="400"
+                  MaxHeight="100"
                       SelectionMode="None"
                       IsItemClickEnabled="True"
                       CanDragItems="False"
                       AllowDrop="False"
                       FlowDirection="LeftToRight"
                       ItemClick="CategoryGrid_ItemClick">
-                <GridView.ItemTemplate>
-                    <DataTemplate x:DataType="ws:StorageFolder">
-                        <StackPanel Width = '240' Orientation = 'Horizontal'>
-                            <TextBlock Style = '{StaticResource BodyTextBlockStyle}' Margin = '8,0,0,0' Text = '{x:Bind DisplayName}'
-                                       TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="ws:StorageFolder">
+                    <StackPanel Width = '200' Orientation = 'Horizontal' Margin="8">
+                        <TextBlock Style = '{StaticResource BodyTextBlockStyle}' Margin = '12,0,12,0' Text = '{x:Bind DisplayName}'
+                                       TextTrimming="CharacterEllipsis" MaxLines="1" MaxWidth="200" />
+                    </StackPanel>
+                </DataTemplate>
+            </GridView.ItemTemplate>
 
-                <GridView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <ItemsWrapGrid x:Name="MaxItemsWrapGrid" 
-                           MaximumRowsOrColumns="2" 
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid x:Name="MaxItemsWrapGrid" 
+                           MaximumRowsOrColumns="4"
                            Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </GridView.ItemsPanel>
-            </GridView>
-            <DropDownButton x:Name="ConvertButton" Content="Convert" IsEnabled="False">
-                <DropDownButton.Flyout>
-                    <MenuFlyout x:Name="ConvertMenu">
-                        <MenuFlyoutItem Text="PNG" Tag="PNG" Click="ConvertOption_Click" />
-                        <MenuFlyoutItem Text="JPEG" Tag="JPEG" Click="ConvertOption_Click" />
-                        <MenuFlyoutItem Text="GIF" Tag="GIF" Click="ConvertOption_Click" />
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem Text="HEIF" Tag="HEIF" Click="ConvertOption_Click" />
-                        <MenuFlyoutItem Text="JPEG-XR" Tag="JXR" Click="ConvertOption_Click" />
-                    </MenuFlyout>
-                </DropDownButton.Flyout>
-            </DropDownButton>
-        </StackPanel>
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
+        </GridView>
     </Grid>
 </Window>

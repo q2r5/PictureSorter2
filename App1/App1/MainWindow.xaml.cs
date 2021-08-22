@@ -13,6 +13,7 @@ using Windows.Storage.Pickers;
 using Windows.Storage.Search;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
+using Microsoft.UI.Xaml.Input;
 
 #if !UNIVERSAL
 using WinRT;
@@ -49,6 +50,7 @@ namespace App1
         }
 
         private StorageFolder _currentFolder;
+        private bool FilterChanged;
         private HashSet<string> FilteredFileTypes
         {
             get => _filteredFileTypes;
@@ -58,6 +60,7 @@ namespace App1
                 {
                     appData.Values["fileTypes"] = string.Join(",", value);
                     _filteredFileTypes = value;
+                    FilterChanged = true;
                 }
             }
         }
@@ -68,11 +71,14 @@ namespace App1
 
         private readonly ApplicationDataContainer appData = ApplicationData.Current.LocalSettings;
 
+        private HashSet<(StorageFile, StorageFolder)> recentCommands = new();
+
         public MainWindow()
         {
             InitializeComponent();
 
             FilteredFileTypes = ((string)appData.Values["fileTypes"] ?? ".jpg,.png,.gif").Split(",").ToHashSet();
+            FilterChanged = false;
             foreach (string fileType in FilteredFileTypes)
             {
                 foreach (MenuFlyoutItemBase item in FilterMenu.Items)
@@ -88,6 +94,8 @@ namespace App1
             {
                 CurrentFolder = StorageFolder.GetFolderFromPathAsync((string)appData.Values["path"]).GetAwaiter().GetResult();
             }
+
+            _ = fileList.Focus(FocusState.Programmatic);
         }
 
         private async void PickFolderButton_Click(object sender, RoutedEventArgs e)
@@ -120,7 +128,6 @@ namespace App1
             if (CurrentFolder == null) { return; }
 
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", CurrentFolder);
-            filePathBox.Text = CurrentFolder.Path;
 
             files = await GetFiles(CurrentFolder);
             folders = await GetFolders(CurrentFolder);
@@ -129,6 +136,7 @@ namespace App1
             RefreshCategoriesButton.IsEnabled = true;
             RefreshFilesButton.IsEnabled = true;
             ConvertButton.IsEnabled = true;
+            NewCategoryButton.IsEnabled = true;
 
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
@@ -138,6 +146,8 @@ namespace App1
             FolderList.SelectedIndex = 0;
 
             CategoryGrid.ItemsSource = folders;
+
+            FolderHeader.Text = CurrentFolder.DisplayName;
         }
 
         private async Task<ObservableCollection<StorageFile>> GetFiles(StorageFolder folder)
@@ -279,6 +289,12 @@ namespace App1
             NewCategoryButton.Flyout.Hide();
             _ = await CurrentFolder.CreateFolderAsync(NewCatName.Text, CreationCollisionOption.GenerateUniqueName);
             folders = await GetFolders(CurrentFolder);
+
+            FolderList.ItemsSource = folders;
+            FolderList.DisplayMemberPath = "Name";
+            FolderList.SelectedIndex = 0;
+
+            CategoryGrid.ItemsSource = folders;
         }
 
         private void NewCatName_TextChanged(object sender, TextChangedEventArgs e)
@@ -293,15 +309,23 @@ namespace App1
 
         private async Task MoveFile(StorageFile file, StorageFolder folder)
         {
+            if (file == null || folder == null || fileList.SelectedIndex == -1) { return; }
             int selectedIndex = fileList.SelectedIndex;
             await file.MoveAsync(folder);
             _ = files.Remove(file);
             fileList.SelectedIndex = selectedIndex;
+            _ = recentCommands.Add((file, folder));
         }
 
         private async void RefreshCategoriesButton_Click(object sender, RoutedEventArgs e)
         {
             folders = await GetFolders(CurrentFolder);
+
+            FolderList.ItemsSource = folders;
+            FolderList.DisplayMemberPath = "Name";
+            FolderList.SelectedIndex = 0;
+
+            CategoryGrid.ItemsSource = folders;
         }
 
         private void ToggleMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
@@ -314,9 +338,44 @@ namespace App1
 
         private async void FilterMenu_Closed(object sender, object e)
         {
+            if (FilterChanged == false) { return; }
             files = await GetFiles(CurrentFolder);
             fileList.ItemsSource = files;
             fileList.SelectedIndex = 0;
+        }
+
+        private bool CanUndo()
+        {
+            return recentCommands != null && recentCommands.Count > 0;
+        }
+
+        private async void Undo(object sender, RoutedEventArgs e)
+        {
+            (StorageFile, StorageFolder) lastCommand = recentCommands.Last();
+            if (files.Contains(lastCommand.Item1)) { return; }
+            await MoveFile(lastCommand.Item1, CurrentFolder);
+            int index = fileList.SelectedIndex;
+            files.Insert(index, lastCommand.Item1);
+            fileList.ItemsSource = files;
+            fileList.SelectedIndex = index;
+        }
+
+        private async void Redo(object sender, RoutedEventArgs e)
+        {
+            (StorageFile, StorageFolder) lastCommand = recentCommands.Last();
+            await MoveFile(lastCommand.Item1, lastCommand.Item2);
+            files = await GetFiles(CurrentFolder);
+            int index = fileList.SelectedIndex;
+            fileList.ItemsSource = files;
+            fileList.SelectedIndex = index;
+        }
+
+        private void NewCatName_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                NewCategoryButton_Click(sender, e);
+            }
         }
     }
 }

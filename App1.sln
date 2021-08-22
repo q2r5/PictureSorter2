@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31521.260
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "App1 (Package)", "App1\App1 (Package)\App1 (Package).wapproj", "{54F4BD79-56F6-4395-B93F-4971D960D409}"
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Picture Sorter 2 (Package)", "App1\App1 (Package)\Picture Sorter 2 (Package).wapproj", "{54F4BD79-56F6-4395-B93F-4971D960D409}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App1", "App1\App1\App1.csproj", "{1AF7C208-62C9-4D21-854D-D7EAA465F7D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Picture Sorter 2", "App1\App1\Picture Sorter 2.csproj", "{1AF7C208-62C9-4D21-854D-D7EAA465F7D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

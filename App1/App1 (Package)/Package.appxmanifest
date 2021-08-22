@@ -9,10 +9,10 @@
   <Identity
     Name="12c0e799-8b6f-461b-9b08-f4623c2e921a"
     Publisher="CN=q2r5"
-    Version="0.0.1.0" />
+    Version="0.0.2.0" />
 
   <Properties>
-    <DisplayName>App1 (Package)</DisplayName>
+    <DisplayName>Picture Sorter 2 (Package)</DisplayName>
     <PublisherDisplayName>q2r5</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
