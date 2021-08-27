@@ -20,20 +20,17 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock x:Name="FolderHeader"
-                   Style="{ThemeResource SubheaderTextBlockStyle}"
-                   Margin="12,0,0,8"/>
         <ListView x:Name="fileList"
                   AllowDrop="False"
                   Grid.Row="1"
                   Grid.Column="0"
-                  Grid.RowSpan="3" 
-                  MinWidth="150" 
-                  MaxWidth="300"
+                  Grid.RowSpan="4" 
+                  Width="300"
                   VerticalAlignment="Stretch"
                   SelectionChanged="FileList_SelectionChanged"
+                  ItemsSource="{x:Bind viewModel.CurrentFiles, Mode=OneWay}"
                   Background="{ThemeResource SystemControlAcrylicElementBrush}"
-                  Margin="12,0,12,0">
+                  Margin="12,0,12,12">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="ws:StorageFile">
                     <Grid Margin="0,12,0,12" AutomationProperties.Name="{x:Bind DisplayName}">
@@ -50,20 +47,36 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <Border Grid.Row="0" Grid.Column="1"
+        <Border Grid.Row="1" Grid.Column="1"
                 Grid.RowSpan="3"
                 Background="{ThemeResource SystemControlAcrylicElementBrush}"
                 VerticalAlignment="Stretch" 
                 HorizontalAlignment="Stretch"
-                Margin="0,12,12,0"
+                Margin="0,0,12,0"
                 Padding="8"
                 CornerRadius="8"
                 BorderThickness="1">
-            <Image x:Name="ImagePreview" Stretch="Uniform" />
+            <Image x:Name="ImagePreview" Stretch="Uniform" Source="{x:Bind viewModel.CurrentFile.Path, Mode=OneWay}" />
         </Border>
-        <CommandBar Grid.Row="4" Grid.ColumnSpan="2" Margin="0,12,0,0">
+        <CommandBar Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
             <CommandBar.Content>
-                <ComboBox x:Name="FolderList" MaxWidth="300" Margin="4"/>
+                <!--<ComboBox x:Name="FolderList" MaxWidth="300" Margin="4"/>-->
+                <TextBlock x:Name="FolderHeader"
+                           Text="{x:Bind viewModel.CurrentFolder.DisplayName, Mode=OneWay}"
+                   Style="{ThemeResource SubheaderTextBlockStyle}"
+                   Margin="12,0,0,0"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="300"
+                           MaxLines="1">
+                    <TextBlock.ContextFlyout>
+                        <Flyout Placement="Right">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="PathBox" Header="Path" MinWidth="300" MaxLength="255" Text="{x:Bind viewModel.CurrentFolder.Path, Mode=OneWay}" TextChanged="PathBox_TextChanged" KeyDown="PathBox_KeyDown" />
+                                <Button x:Name="PathButton" Content="Go" Margin="8,0,0,0" VerticalAlignment="Bottom" Click="PathButton_Click" IsEnabled="False" />
+                            </StackPanel>
+                        </Flyout>
+                    </TextBlock.ContextFlyout>
+                </TextBlock>
             </CommandBar.Content>
             <CommandBar.PrimaryCommands>
                 <AppBarButton Icon="OpenLocal" Label="Open" Click="PickFolderButton_Click">
@@ -101,7 +114,7 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Name="MoveButton" Icon="MoveToFolder" Label="Move To Selected" Click="MoveButton_Click" ToolTipService.ToolTip="Move To Selected" IsEnabled="False" />
+                <!--<AppBarButton x:Name="MoveButton" Icon="MoveToFolder" Label="Move To Selected" Click="MoveButton_Click" ToolTipService.ToolTip="Move To Selected" IsEnabled="False" />-->
                 <AppBarButton x:Name="NewCategoryButton" Icon="NewFolder" Label="New Category" IsEnabled="False">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="N" />
@@ -142,9 +155,9 @@
             </CommandBar.PrimaryCommands>
         </CommandBar>
         <GridView x:Name="CategoryGrid"
-                  Grid.Row="3"
+                  Grid.Row="4"
                   Grid.Column="1"
-                  Margin="0,12,12,0"
+                  Margin="0,12,12,12"
                   VerticalAlignment="Bottom"
                   Background="{ThemeResource SystemControlAcrylicElementBrush}"
                   MinWidth="400"
@@ -154,7 +167,8 @@
                       CanDragItems="False"
                       AllowDrop="False"
                       FlowDirection="LeftToRight"
-                      ItemClick="CategoryGrid_ItemClick">
+                      ItemClick="CategoryGrid_ItemClick"
+                  ItemsSource="{x:Bind viewModel.Categories, Mode=OneWay}">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="ws:StorageFolder">
                     <StackPanel Width = '200' Orientation = 'Horizontal' Margin="8">
