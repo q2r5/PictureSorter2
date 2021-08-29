@@ -1,15 +1,15 @@
-﻿using Microsoft.UI.Xaml.Media.Imaging;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
-using System.Runtime.CompilerServices;
-using System.Collections.ObjectModel;
 
 namespace App1
 {
@@ -28,7 +28,7 @@ namespace App1
                 {
                     StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", value);
                     appData.Values["path"] = value.Path;
-                    GetFiles(value);
+                    GetFiles(value, true);
                     GetFolders(value);
                 }
             }
@@ -64,7 +64,10 @@ namespace App1
             {
                 if (SetProperty(ref _filteredFileTypes, value))
                 {
-                    appData.Values["fileTypes"] = string.Join(",", value);
+                    if (CurrentFolder != null)
+                    {
+                        GetFiles(CurrentFolder);
+                    }
                 }
             }
         }
@@ -89,9 +92,8 @@ namespace App1
             CurrentFolder = await StorageFolder.GetFolderFromPathAsync(path);
         }
 
-        public async void GetFiles(StorageFolder folder)
+        public async void GetFiles(StorageFolder folder, bool folderChanged = false)
         {
-            CurrentFolder = folder;
             QueryOptions query = new(CommonFileQuery.OrderByName, fileTypeFilter: FilteredFileTypes)
             {
                 FolderDepth = FolderDepth.Shallow,
@@ -99,6 +101,7 @@ namespace App1
             };
             StorageFileQueryResult result = folder.CreateFileQueryWithOptions(query);
             IReadOnlyList<StorageFile> files = await result.GetFilesAsync();
+            List<StorageFile> fileList = files.ToList();
             if (CurrentFiles == null)
             {
                 CurrentFiles = new(files);
@@ -106,18 +109,48 @@ namespace App1
             }
             else
             {
-                if (CurrentFiles.Count > 0)
+                if (folderChanged)
                 {
                     CurrentFiles.Clear();
                 }
-                files.ToList().ForEach(f => CurrentFiles.Add(f));
+
+                if (CurrentFiles.Count > 0)
+                {
+                    List<StorageFile> newFiles = fileList.Except(CurrentFiles, new StorageFileEqualityComparer()).ToList();
+                    List<StorageFile> removedFiles = CurrentFiles.Except(files, new StorageFileEqualityComparer()).ToList();
+                    if (newFiles.Count > 0)
+                    {
+                        newFiles.ForEach(f =>
+                        {
+                            int index = fileList.IndexOf(f);
+                            CurrentFiles.Insert(index, f);
+                        });
+                    }
+                    
+                    if (removedFiles.Count > 0)
+                    {
+                        removedFiles.ForEach(f =>
+                        {
+                            _ = CurrentFiles.Remove(f);
+                        });
+                    }
+                }
+                else
+                {
+                    fileList.ForEach(f => CurrentFiles.Add(f));
+                }
             }
+        }
+
+        public void SaveFilterList()
+        {
+            appData.Values["fileTypes"] = string.Join(",", FilteredFileTypes);
         }
 
         public async void GetFolders(StorageFolder folder)
         {
             IReadOnlyList<StorageFolder> folders = await folder.GetFoldersAsync();
-            Categories = folders.ToHashSet();
+            Categories = new(folders);
         }
 
         public async void MoveFile(StorageFile file, StorageFolder folder)
@@ -234,5 +267,18 @@ namespace App1
             PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
         #endregion
+    }
+
+    internal class StorageFileEqualityComparer : IEqualityComparer<StorageFile>
+    {
+        public bool Equals(StorageFile x, StorageFile y)
+        {
+            return x.IsEqual(y);
+        }
+
+        public int GetHashCode([DisallowNull] StorageFile obj)
+        {
+            return obj.DisplayName.GetHashCode();
+        }
     }
 }

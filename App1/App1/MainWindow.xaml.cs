@@ -29,6 +29,8 @@ namespace App1
     {
         private readonly MainViewModel viewModel = MainViewModel.Instance;
 
+        private bool FilterChanged;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -73,6 +75,10 @@ namespace App1
 #endif
 
             viewModel.CurrentFolder = await folderPicker.PickSingleFolderAsync();
+            if (viewModel.CurrentFolder != null)
+            {
+                FolderChanged();
+            }
         }
 
         private void FolderChanged()
@@ -80,6 +86,7 @@ namespace App1
             RefreshButton.IsEnabled = true;
             ConvertButton.IsEnabled = true;
             NewCategoryButton.IsEnabled = true;
+            ImagePreview.Source = null;
         }
 
         private void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -148,14 +155,17 @@ namespace App1
             string optionTag = item.Tag.ToString();
 
             _ = item.IsChecked ? viewModel.FilteredFileTypes.Add(optionTag) : viewModel.FilteredFileTypes.Remove(optionTag);
+            FilterChanged = true;
         }
 
         private void FilterMenu_Closed(object sender, object e)
         {
-            //if (FilterChanged == false) { return; }
-            //files = await GetFiles(CurrentFolder);
-            //fileList.ItemsSource = files;
-            //fileList.SelectedIndex = 0;
+            if (FilterChanged)
+            {
+                viewModel.SaveFilterList();
+                viewModel.GetFiles(viewModel.CurrentFolder);
+                FilterChanged = false;
+            }
         }
 
         private void Undo(object sender, RoutedEventArgs e)
