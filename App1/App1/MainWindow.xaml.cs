@@ -6,6 +6,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Microsoft.UI.Xaml.Input;
 using System.Linq;
+using System.Numerics;
 
 #if !UNIVERSAL
 using WinRT;
@@ -50,6 +51,8 @@ namespace App1
             {
                 FolderChanged();
             }
+
+            NotificationBox.Translation += new Vector3(0, 0, 32);
         }
 
         private async void PickFolderButton_Click(object sender, RoutedEventArgs e)
@@ -138,10 +141,58 @@ namespace App1
             NewCatAddButton.IsEnabled = NewCatName.Text.Length != 0;
         }
 
-        private void CategoryGrid_ItemClick(object sender, ItemClickEventArgs e)
+        private async void CategoryGrid_ItemClick(object sender, ItemClickEventArgs e)
         {
-            viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder);
-            UndoButton.IsEnabled = true;
+            try
+            {
+                await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder);
+            }
+            catch
+            {
+                if (viewModel.ShowMoveDialog ?? true)
+                {
+                    CustomContentDialog errorDialog = new();
+                    errorDialog.XamlRoot = ImagePreview.XamlRoot;
+
+                    ContentDialogResult result = await errorDialog.ShowAsync();
+
+                    switch (result)
+                    {
+                        case ContentDialogResult.Primary:
+                            await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
+                            NotificationBox.Visibility = Visibility.Visible;
+                            UndoButton.IsEnabled = true;
+                            break;
+                        case ContentDialogResult.None:
+                            break;
+                        case ContentDialogResult.Secondary:
+                            await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.ReplaceExisting);
+                            UndoButton.IsEnabled = true;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else
+                {
+                    if (viewModel.MoveConflictOption == 0)
+                    {
+                        return;
+                    }
+                    else if (viewModel.MoveConflictOption == 1)
+                    {
+                        await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
+                    }
+                    else if (viewModel.MoveConflictOption == 2)
+                    {
+                        await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.ReplaceExisting);
+                    }
+
+                    NotificationBox.Visibility = Visibility.Visible;
+                    UndoButton.IsEnabled = true;
+                }
+            }
+
         }
 
         private void RefreshCategoriesButton_Click(object sender, RoutedEventArgs e)
@@ -171,7 +222,7 @@ namespace App1
         private void Undo(object sender, RoutedEventArgs e)
         {
             int index = fileList.SelectedIndex;
-            viewModel.GetFiles(viewModel.CurrentFolder);
+            viewModel.Undo();
             fileList.SelectedIndex = index;
             UndoButton.IsEnabled = false;
             RedoButton.IsEnabled = true;
@@ -215,6 +266,17 @@ namespace App1
         private void PathBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             PathButton.IsEnabled = PathBox.Text.Length != 0;
+        }
+
+        private void NotifCloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            NotificationBox.Visibility = Visibility.Collapsed;
+        }
+
+        private void ResetDialogs_Click(object sender, RoutedEventArgs e)
+        {
+            viewModel.ShowMoveDialog = true;
+            viewModel.MoveConflictOption = 0;
         }
     }
 }

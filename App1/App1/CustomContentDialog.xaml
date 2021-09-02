@@ -1,0 +1,35 @@
+﻿<ContentDialog
+    x:Class="App1.CustomContentDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:App1"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:MainViewModel}"
+    mc:Ignorable="d"
+    Opened="CustomContentDialog_Opened"
+    PrimaryButtonText="Rename"
+    PrimaryButtonClick="CustomContentDialog_PrimaryButtonClick"
+    SecondaryButtonText="Overwrite"
+    SecondaryButtonClick="CustomContentDialog_SecondaryButtonClick"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <ContentDialog.TitleTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7BA;" Width="40" Height="40" Margin="10,0"/>
+                <TextBlock Text="Oops."/>
+            </StackPanel>
+        </DataTemplate>
+    </ContentDialog.TitleTemplate>
+    <StackPanel>
+        <TextBlock TextWrapping="WrapWholeWords">
+        <Run>
+            An image already exists with that name. What should we do now? 
+        </Run>
+        </TextBlock>
+        <CheckBox x:Name="NeverShowCheckBox" Content="Never show again."
+              Checked="NeverShowCheckBox_Checked" Unchecked="NeverShowCheckBox_Unchecked"/>
+    </StackPanel>
+</ContentDialog>

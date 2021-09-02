@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
@@ -73,6 +74,24 @@ namespace App1
         }
         private HashSet<string> _filteredFileTypes = new();
 
+        public bool? ShowMoveDialog
+        {
+            get => (bool?)appData.Values["HideMoveDialog"];
+            set => appData.Values["HideMoveDialog"] = value;
+        }
+
+        public int? MoveConflictOption
+        {
+            get => (int?)appData.Values["MoveConflictOption"];
+            set
+            {
+                if (value <= 2)
+                {
+                    appData.Values["MoveConflictOption"] = value;
+                }
+            }
+        }
+
         private (StorageFile, StorageFolder) lastCommand;
 
         static MainViewModel()
@@ -83,6 +102,10 @@ namespace App1
         private MainViewModel()
         {
             FilteredFileTypes = ((string)appData.Values["fileTypes"] ?? ".jpg,.png,.gif").Split(",").ToHashSet();
+            if (MoveConflictOption == null)
+            {
+                MoveConflictOption = 0;
+            }
             SetFolder(appData.Values["path"] as string);
         }
 
@@ -153,12 +176,20 @@ namespace App1
             Categories = new(folders);
         }
 
-        public async void MoveFile(StorageFile file, StorageFolder folder)
+        public async Task MoveFile(StorageFile file, StorageFolder folder, NameCollisionOption collisionOption = NameCollisionOption.FailIfExists)
         {
-            if (file == null || folder == null) { return; }
-            await file.MoveAsync(folder, file.Name, NameCollisionOption.GenerateUniqueName);
-            _ = CurrentFiles.Remove(file);
+            if (file == null || folder == null) { throw new ArgumentNullException(message: "file or folder was null", null); }
 
+            try
+            {
+                await file.MoveAsync(folder, file.Name, collisionOption);
+            }
+            catch
+            {
+                throw;
+            }
+
+            _ = CurrentFiles.Remove(file);
             lastCommand = (file, folder);
         }
 
@@ -234,17 +265,16 @@ namespace App1
             }
         }
 
-        public void Undo()
+        public async void Undo()
         {
             if (CurrentFiles.Contains(lastCommand.Item1)) { return; }
-            MoveFile(lastCommand.Item1, CurrentFolder);
+            await MoveFile(lastCommand.Item1, CurrentFolder);
         }
 
-        public void Redo()
+        public async void Redo()
         {
-            MoveFile(lastCommand.Item1, lastCommand.Item2);
+            await MoveFile(lastCommand.Item1, lastCommand.Item2);
             GetFiles(CurrentFolder);
-
         }
 
         #region INotifyPropertyChanged

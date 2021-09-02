@@ -48,16 +48,42 @@
             </ListView.ItemTemplate>
         </ListView>
         <Border Grid.Row="1" Grid.Column="1"
-                Grid.RowSpan="3"
+                Grid.RowSpan="2"
                 Background="{ThemeResource SystemControlAcrylicElementBrush}"
                 VerticalAlignment="Stretch" 
                 HorizontalAlignment="Stretch"
                 Margin="0,0,12,0"
-                Padding="8"
                 CornerRadius="8"
                 BorderThickness="1">
-            <Image x:Name="ImagePreview" Stretch="Uniform" Source="{x:Bind viewModel.CurrentFile.Path, Mode=OneWay}" />
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Border x:Name="NotificationBox" Grid.Row="0" Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                        Padding="8" CornerRadius="8,8,0,0" Canvas.ZIndex="1" Visibility="Collapsed">
+                    <Border.Shadow>
+                        <ThemeShadow />
+                    </Border.Shadow>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Grid.Column="0" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7BA;" Foreground="Yellow" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Padding="8,0,0,0" VerticalAlignment="Center">File moved with conflicts.</TextBlock>
+                        <Button x:Name="NotifCloseButton" Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Click="NotifCloseButton_Click">
+                            <SymbolIcon Symbol="Clear" />
+                        </Button>
+                    </Grid>
+                </Border>
+                <Image  x:Name="ImagePreview" Grid.RowSpan="2" Margin="8"
+                        Stretch="Uniform" Source="{x:Bind viewModel.CurrentFile.Path, Mode=OneWay}" />
+            </Grid>
         </Border>
+
         <CommandBar Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
             <CommandBar.Content>
                 <!--<ComboBox x:Name="FolderList" MaxWidth="300" Margin="4"/>-->
@@ -152,8 +178,16 @@
                         <KeyboardAccelerator Modifiers="Control,Shift" Key="Z" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
+                <AppBarButton x:Name="SettingsButton" Label="Settings" Icon="Setting" ToolTipService.ToolTip="Settings">
+                    <AppBarButton.Flyout>
+                        <MenuFlyout x:Name="SettingsMenu">
+                            <MenuFlyoutItem x:Name="ResetDialogs" Text="Reset Dialogs" Click="ResetDialogs_Click" />
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
             </CommandBar.PrimaryCommands>
         </CommandBar>
+
         <GridView x:Name="CategoryGrid"
                   Grid.Row="4"
                   Grid.Column="1"
