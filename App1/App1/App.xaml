@@ -9,23 +9,6 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <StaticResource x:Key="HomePageBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
-                    <SolidColorBrush x:Key="SearchBoxBorderBrush" Color="Transparent" />
-                    <Thickness x:Key="SearchBoxBorderThickness">0</Thickness>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <StaticResource x:Key="HomePageBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
-                    <SolidColorBrush x:Key="SearchBoxBorderBrush" Color="Transparent" />
-                    <Thickness x:Key="SearchBoxBorderThickness">0</Thickness>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="HighContrast">
-                    <SolidColorBrush x:Key="HomePageBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
-                    <SolidColorBrush x:Key="SearchBoxBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
-                    <Thickness x:Key="SearchBoxBorderThickness">2</Thickness>
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
             <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>

@@ -7,6 +7,8 @@ using Windows.Storage.Pickers;
 using Microsoft.UI.Xaml.Input;
 using System.Linq;
 using System.Numerics;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI;
 
 #if !UNIVERSAL
 using WinRT;
@@ -35,6 +37,9 @@ namespace App1
         public MainWindow()
         {
             InitializeComponent();
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
+            AppTitleBar.Height = 30;
 
             foreach (string fileType in viewModel.FilteredFileTypes)
             {
@@ -160,10 +165,11 @@ namespace App1
                     {
                         case ContentDialogResult.Primary:
                             await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
-                            NotificationBox.Visibility = Visibility.Visible;
+                            ShowNotificationBox();
                             UndoButton.IsEnabled = true;
                             break;
                         case ContentDialogResult.None:
+                            ShowNotificationBox(true);
                             break;
                         case ContentDialogResult.Secondary:
                             await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.ReplaceExisting);
@@ -182,13 +188,15 @@ namespace App1
                     else if (viewModel.MoveConflictOption == 1)
                     {
                         await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
+                        ShowNotificationBox();
                     }
                     else if (viewModel.MoveConflictOption == 2)
                     {
                         await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.ReplaceExisting);
+                        ShowNotificationBox(true);
                     }
 
-                    NotificationBox.Visibility = Visibility.Visible;
+                    ShowNotificationBox();
                     UndoButton.IsEnabled = true;
                 }
             }
@@ -277,6 +285,23 @@ namespace App1
         {
             viewModel.ShowMoveDialog = true;
             viewModel.MoveConflictOption = 0;
+        }
+
+        private void ShowNotificationBox(bool error = false)
+        {
+            if (error)
+            {
+                NotificationBoxIcon.Glyph = "&#xE783;";
+                NotificationBoxIcon.Foreground = new SolidColorBrush(Colors.Red);
+                NotificationBoxText.Text = "That image already exists in the selected folder.";
+            }
+            else
+            {
+                NotificationBoxIcon.Glyph = "&#xE7BA;";
+                NotificationBoxIcon.Foreground = new SolidColorBrush(Colors.Yellow);
+                NotificationBoxText.Text = "File moved with conflicts.";
+            }
+            NotificationBox.Visibility = Visibility.Visible;
         }
     }
 }

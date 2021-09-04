@@ -15,14 +15,30 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
             <RowDefinition />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <Grid x:Name="AppTitleBar"
+              Grid.ColumnSpan="2"
+              IsHitTestVisible="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8B9;"
+                      Grid.Column="0" HorizontalAlignment="Left"
+                      Width="20" Height="20" Margin="12,0" />
+            <TextBlock Text="{x:Bind Title}" 
+                       Grid.Column="0" 
+                       Style="{StaticResource CaptionTextBlockStyle}" 
+                       Margin="44,8,0,0" />
+        </Grid>
         <ListView x:Name="fileList"
                   AllowDrop="False"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   Grid.Column="0"
                   Grid.RowSpan="4" 
                   Width="300"
@@ -47,7 +63,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <Border Grid.Row="1" Grid.Column="1"
+        <Border Grid.Row="2" Grid.Column="1"
                 Grid.RowSpan="2"
                 Background="{ThemeResource SystemControlAcrylicElementBrush}"
                 VerticalAlignment="Stretch" 
@@ -72,8 +88,8 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <FontIcon Grid.Column="0" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7BA;" Foreground="Yellow" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Padding="8,0,0,0" VerticalAlignment="Center">File moved with conflicts.</TextBlock>
+                        <FontIcon x:Name="NotificationBoxIcon" Grid.Column="0" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7BA;" Foreground="Yellow" VerticalAlignment="Center" />
+                        <TextBlock x:Name="NotificationBoxText" Grid.Column="1" Padding="8,0,0,0" VerticalAlignment="Center">File moved with conflicts.</TextBlock>
                         <Button x:Name="NotifCloseButton" Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Click="NotifCloseButton_Click">
                             <SymbolIcon Symbol="Clear" />
                         </Button>
@@ -84,7 +100,7 @@
             </Grid>
         </Border>
 
-        <CommandBar Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
+        <CommandBar Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,12">
             <CommandBar.Content>
                 <!--<ComboBox x:Name="FolderList" MaxWidth="300" Margin="4"/>-->
                 <TextBlock x:Name="FolderHeader"
@@ -189,7 +205,7 @@
         </CommandBar>
 
         <GridView x:Name="CategoryGrid"
-                  Grid.Row="4"
+                  Grid.Row="5"
                   Grid.Column="1"
                   Margin="0,12,12,12"
                   VerticalAlignment="Bottom"
