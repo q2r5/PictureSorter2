@@ -9,6 +9,10 @@ using System.Linq;
 using System.Numerics;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
+using System.Diagnostics;
+using Windows.ApplicationModel.DataTransfer;
+using System.Collections.Generic;
+using System.Drawing;
 
 #if !UNIVERSAL
 using WinRT;
@@ -39,7 +43,6 @@ namespace App1
             InitializeComponent();
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
-            AppTitleBar.Height = 30;
 
             foreach (string fileType in viewModel.FilteredFileTypes)
             {
@@ -302,6 +305,11 @@ namespace App1
                 NotificationBoxText.Text = "File moved with conflicts.";
             }
             NotificationBox.Visibility = Visibility.Visible;
+        }
+
+        private void Menu_Click(object sender, RoutedEventArgs e)
+        {
+            MainView.IsPaneOpen = !MainView.IsPaneOpen;
         }
     }
 }
