@@ -9,10 +9,6 @@ using System.Linq;
 using System.Numerics;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
-using System.Diagnostics;
-using Windows.ApplicationModel.DataTransfer;
-using System.Collections.Generic;
-using System.Drawing;
 
 #if !UNIVERSAL
 using WinRT;
@@ -32,17 +28,19 @@ namespace App1
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainPage : Page
     {
         private readonly MainViewModel viewModel = MainViewModel.Instance;
 
         private bool FilterChanged;
 
-        public MainWindow()
+        private readonly string Title = "(New) Picture Sorter";
+
+        public MainPage()
         {
             InitializeComponent();
-            ExtendsContentIntoTitleBar = true;
-            SetTitleBar(AppTitleBar);
+            App.CurrentWindow.SetTitleBar(AppTitleBar);
+            App.CurrentWindow.Title = Title;
 
             foreach (string fileType in viewModel.FilteredFileTypes)
             {
@@ -53,11 +51,6 @@ namespace App1
                         (item as ToggleMenuFlyoutItem).IsChecked = true;
                     }
                 }
-            }
-
-            if (viewModel.CurrentFolder != null)
-            {
-                FolderChanged();
             }
 
             NotificationBox.Translation += new Vector3(0, 0, 32);
@@ -77,22 +70,17 @@ namespace App1
 
 #if !UNIVERSAL
             // When running on win32, FileOpenPicker needs to know the top-level hwnd via IInitializeWithWindow::Initialize.
-            if (Current == null)
+            if (App.CurrentWindow != null)
             {
                 IInitializeWithWindow initializeWithWindowWrapper = folderPicker.As<IInitializeWithWindow>();
-                IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-                initializeWithWindowWrapper.Initialize(hwnd);
+                initializeWithWindowWrapper.Initialize(App.HWND);
             }
 #endif
 
             viewModel.CurrentFolder = await folderPicker.PickSingleFolderAsync();
-            if (viewModel.CurrentFolder != null)
-            {
-                FolderChanged();
-            }
         }
 
-        private void FolderChanged()
+        public void FolderChanged()
         {
             RefreshButton.IsEnabled = true;
             ConvertButton.IsEnabled = true;
@@ -138,7 +126,7 @@ namespace App1
             viewModel.ConvertFile(viewModel.CurrentFile, option);
         }
 
-        private void NewCategoryButton_Click(object sender, RoutedEventArgs e)
+        private void NewCategoryAddButton_Click(object sender, RoutedEventArgs e)
         {
             NewCategoryButton.Flyout.Hide();
             viewModel.NewFolder(NewCatName.Text, viewModel.CurrentFolder);
@@ -190,7 +178,8 @@ namespace App1
                     }
                     else if (viewModel.MoveConflictOption == 1)
                     {
-                        await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
+                        StorageFile currentFile = viewModel.CurrentFile;
+                        await viewModel.MoveFile(currentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
                         ShowNotificationBox();
                     }
                     else if (viewModel.MoveConflictOption == 2)
@@ -202,6 +191,10 @@ namespace App1
                     ShowNotificationBox();
                     UndoButton.IsEnabled = true;
                 }
+            }
+            finally
+            {
+                fileList.Focus(FocusState.Programmatic);
             }
 
         }
@@ -248,15 +241,15 @@ namespace App1
             RedoButton.IsEnabled = false;
         }
 
-        private void NewCatName_KeyDown(object sender, KeyRoutedEventArgs e)
+        private void NewCatName_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
-                NewCategoryButton_Click(sender, e);
+                NewCategoryAddButton_Click(sender, e);
             }
         }
 
-        private void PathBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        private void PathBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
@@ -282,6 +275,7 @@ namespace App1
         private void NotifCloseButton_Click(object sender, RoutedEventArgs e)
         {
             NotificationBox.Visibility = Visibility.Collapsed;
+            fileList.Focus(FocusState.Programmatic);
         }
 
         private void ResetDialogs_Click(object sender, RoutedEventArgs e)
@@ -290,26 +284,55 @@ namespace App1
             viewModel.MoveConflictOption = 0;
         }
 
-        private void ShowNotificationBox(bool error = false)
+        private void ShowNotificationBox(bool error = false, string fileName = "")
         {
             if (error)
             {
                 NotificationBoxIcon.Glyph = "&#xE783;";
                 NotificationBoxIcon.Foreground = new SolidColorBrush(Colors.Red);
-                NotificationBoxText.Text = "That image already exists in the selected folder.";
+                NotificationBoxText.Text = fileName.Length == 0
+                    ? "That image already exists in the selected folder."
+                    : fileName + " already exists in the selected folder";
             }
             else
             {
                 NotificationBoxIcon.Glyph = "&#xE7BA;";
                 NotificationBoxIcon.Foreground = new SolidColorBrush(Colors.Yellow);
-                NotificationBoxText.Text = "File moved with conflicts.";
+                NotificationBoxText.Text = fileName.Length == 0
+                    ? "File moved with conflicts."
+                    : fileName + " was renamed and moved.";
             }
             NotificationBox.Visibility = Visibility.Visible;
+
+            // Auto-close the box after 30 sec.
+            DispatcherTimer timer = new();
+            timer.Tick += (object sender, object e) =>
+            {
+                NotificationBox.Visibility = Visibility.Collapsed;
+                timer.Stop();
+            };
+            timer.Interval = new TimeSpan(0, 0, 0, 30);
+            timer.Start();
         }
 
         private void Menu_Click(object sender, RoutedEventArgs e)
         {
             MainView.IsPaneOpen = !MainView.IsPaneOpen;
+        }
+
+        private async void FileList_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Left && fileList.SelectedIndex > 0)
+            {
+                fileList.SelectedIndex -= 1;
+            }
+            else if (e.Key == Windows.System.VirtualKey.Right && fileList.SelectedIndex < fileList.Items.Count)
+            {
+                fileList.SelectedIndex += 1;
+            } else if (e.Key == Windows.System.VirtualKey.Delete && fileList.SelectedIndex != -1)
+            {
+                await viewModel.CurrentFile.DeleteAsync();
+            }
         }
     }
 }

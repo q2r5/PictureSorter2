@@ -18,6 +18,7 @@ namespace App1
     {
         public static MainViewModel Instance { get; private set; }
 
+        #region Variables
         private readonly ApplicationDataContainer appData = ApplicationData.Current.LocalSettings;
 
         public StorageFolder CurrentFolder
@@ -25,10 +26,11 @@ namespace App1
             get => _currentFolder;
             set
             {
-                if (SetProperty(ref _currentFolder, value))
+                if (value != null && SetProperty(ref _currentFolder, value))
                 {
                     StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", value);
                     appData.Values["path"] = value.Path;
+                    App.MainPage.FolderChanged();
                     GetFiles(value, true);
                     GetFolders(value);
                 }
@@ -93,7 +95,9 @@ namespace App1
         }
 
         private (StorageFile, StorageFolder) lastCommand;
+        #endregion
 
+        #region Initializers
         static MainViewModel()
         {
             Instance = new MainViewModel();
@@ -108,6 +112,7 @@ namespace App1
             }
             SetFolder(appData.Values["path"] as string);
         }
+        #endregion
 
         public async void SetFolder(string path)
         {

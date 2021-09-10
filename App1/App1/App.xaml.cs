@@ -1,20 +1,5 @@
 ﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,7 +11,11 @@ namespace App1
     /// </summary>
     public partial class App : Application
     {
-        public IntPtr hwnd;
+        public static Window CurrentWindow { get; private set; }
+
+        public static MainPage MainPage { get; private set; }
+
+        public static IntPtr HWND => WinRT.Interop.WindowNative.GetWindowHandle(CurrentWindow);
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -44,18 +33,13 @@ namespace App1
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            m_window = new MainWindow();
+            CurrentWindow = new Window();
+            CurrentWindow.ExtendsContentIntoTitleBar = true;
+            MainPage = new MainPage();
+            CurrentWindow.Content = MainPage;
 
-            hwnd = WinRT.Interop.WindowNative.GetWindowHandle(m_window);
-
-            m_window.Title = "(New) Picture Sorter";
-
-#if UNIVERSAL
-            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-#endif
-            m_window.Activate();
+            // Ensure the current window is active
+            CurrentWindow.Activate();
         }
-
-        private Window m_window;
     }
 }
