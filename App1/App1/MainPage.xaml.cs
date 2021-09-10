@@ -53,6 +53,11 @@ namespace App1
                 }
             }
 
+            if (viewModel.CurrentFile != null)
+            {
+                FolderChanged();
+            }
+
             NotificationBox.Translation += new Vector3(0, 0, 32);
         }
 
@@ -88,7 +93,7 @@ namespace App1
             ImagePreview.Source = null;
         }
 
-        private void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (fileList.SelectedIndex == -1) { return; }
 
@@ -104,6 +109,8 @@ namespace App1
                     item.Visibility = item.Tag.ToString() == fileType ? Visibility.Collapsed : Visibility.Visible;
                 }
             }
+
+            InfoList.ItemsSource = await viewModel.GetFileInfo(viewModel.CurrentFile);
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
@@ -320,7 +327,7 @@ namespace App1
             MainView.IsPaneOpen = !MainView.IsPaneOpen;
         }
 
-        private async void FileList_KeyUp(object sender, KeyRoutedEventArgs e)
+        private void FileList_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == Windows.System.VirtualKey.Left && fileList.SelectedIndex > 0)
             {
@@ -331,8 +338,34 @@ namespace App1
                 fileList.SelectedIndex += 1;
             } else if (e.Key == Windows.System.VirtualKey.Delete && fileList.SelectedIndex != -1)
             {
-                await viewModel.CurrentFile.DeleteAsync();
+                viewModel.DeleteFile(viewModel.CurrentFile);
             }
+        }
+
+        private void ImagePreview_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (viewModel.CurrentFile != null)
+            {
+                ImageInfoBar.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void ImagePreview_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (viewModel.CurrentFile != null)
+            {
+                ImageInfoBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void DeleteImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            viewModel.DeleteFile(viewModel.CurrentFile);
+        }
+
+        private void ImageInfoButton_Click(object sender, RoutedEventArgs e)
+        {
+            ImageSplit.IsPaneOpen = true;
         }
     }
 }

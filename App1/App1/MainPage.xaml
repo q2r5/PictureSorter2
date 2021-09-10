@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:App1"
     xmlns:ws="using:Windows.Storage"
+    xmlns:c="using:System.Collections"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -46,12 +47,12 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <StackPanel x:Name="AppTitleBar" Grid.Column="1" Orientation="Horizontal">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8B9;"
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8B9;"
                       HorizontalAlignment="Left" VerticalAlignment="Center"
                       Width="20" Height="20" Margin="8,0" />
                 <TextBlock Text="{x:Bind Title}"
                            VerticalAlignment="Center"
-                           Style="{StaticResource BaseTextBlockStyle}" />
+                           Style="{ThemeResource BaseTextBlockStyle}" />
             </StackPanel>
             <Button x:Name="Menu" Grid.Column="0"
                     HorizontalAlignment="Left" VerticalAlignment="Center"
@@ -64,7 +65,7 @@
             <CommandBar.Content>
                 <TextBlock x:Name="FolderHeader"
                            Text="{x:Bind viewModel.CurrentFolder.DisplayName, Mode=OneWay}"
-                           Style="{StaticResource SubheaderTextBlockStyle}"
+                           Style="{ThemeResource SubheaderTextBlockStyle}"
                            Margin="12,0,0,0"
                            TextTrimming="CharacterEllipsis"
                            MaxWidth="300"
@@ -184,7 +185,7 @@
                                 <Image Source="{x:Bind Path}" Height="50" Width="50" />
 
                                 <StackPanel Margin="12,0,0,0" Grid.Column="1" >
-                                    <TextBlock Text="{x:Bind DisplayName}" FontSize="14" FontWeight="SemiBold" Style="{StaticResource BaseTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,6" LineHeight="20"/>
+                                    <TextBlock Text="{x:Bind DisplayName}" FontSize="14" FontWeight="SemiBold" Style="{ThemeResource BaseTextBlockStyle}" HorizontalAlignment="Left" Margin="0,0,0,6" LineHeight="20"/>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -201,42 +202,79 @@
                     <Border Background="{ThemeResource SystemControlAcrylicElementBrush}"
                             Grid.Row="0" Margin="12,12,12,0"
                             VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                            CornerRadius="8" BorderThickness="1">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <Border x:Name="NotificationBox" Grid.Row="0" Background="{StaticResource SystemControlAcrylicElementBrush}"
-                                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                                    Padding="8" CornerRadius="8,8,0,0" Canvas.ZIndex="1" Visibility="Collapsed">
-                                <Border.Shadow>
-                                    <ThemeShadow />
-                                </Border.Shadow>
+                            CornerRadius="8" BorderThickness="1"
+                            PointerEntered="ImagePreview_PointerEntered" PointerExited="ImagePreview_PointerExited">
+                        <SplitView x:Name="ImageSplit" DisplayMode="Overlay" IsPaneOpen="False" PanePlacement="Right" PaneBackground="{ThemeResource SystemControlAcrylicElementBrush}">
+                            <SplitView.Content>
                                 <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <FontIcon x:Name="NotificationBoxIcon" Grid.Column="0"
-                                              FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7BA;"
+                                    <Border x:Name="NotificationBox" Grid.Row="0" Grid.ColumnSpan="2" Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                    Padding="8" CornerRadius="8,8,0,0" Canvas.ZIndex="1" Visibility="Collapsed">
+                                        <Border.Shadow>
+                                            <ThemeShadow />
+                                        </Border.Shadow>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <FontIcon x:Name="NotificationBoxIcon" Grid.Column="0"
+                                              FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE7BA;"
                                               Foreground="Yellow" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="NotificationBoxText" Grid.Column="1" Padding="8,0,0,0" VerticalAlignment="Center" />
-                                    <Button x:Name="NotifCloseButton" Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Click="NotifCloseButton_Click">
-                                        <SymbolIcon Symbol="Clear" />
-                                    </Button>
+                                            <TextBlock x:Name="NotificationBoxText" Grid.Column="1" Padding="8,0,0,0" VerticalAlignment="Center" />
+                                            <Button x:Name="NotifCloseButton" Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Click="NotifCloseButton_Click">
+                                                <SymbolIcon Symbol="Clear" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                    <Image x:Name="ImagePreview" Grid.RowSpan="3" Grid.ColumnSpan="2" Margin="8" Stretch="Uniform" Source="{x:Bind viewModel.CurrentFile.Path, Mode=OneWay}" />
+                                    <CommandBar x:Name="ImageInfoBar" Visibility="Collapsed" IsOpen="False" DefaultLabelPosition="Right" Grid.Row="2" Grid.Column="1" Canvas.ZIndex="1">
+                                        <AppBarButton x:Name="ImageInfoButton" Label="Info" Click="ImageInfoButton_Click">
+                                            <AppBarButton.Icon>
+                                                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE946;" />
+                                            </AppBarButton.Icon>
+                                        </AppBarButton>
+                                        <AppBarButton x:Name="DeleteImageButton" Icon="Delete" Label="Delete" Foreground="Red" Click="DeleteImageButton_Click" />
+                                    </CommandBar>
                                 </Grid>
-                            </Border>
-                            <Image x:Name="ImagePreview" Grid.RowSpan="2" Margin="8" Stretch="Uniform" Source="{x:Bind viewModel.CurrentFile.Path, Mode=OneWay}" />
-                        </Grid>
+                            </SplitView.Content>
+                            <SplitView.Pane>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="{x:Bind viewModel.CurrentFile.DisplayName, Mode=OneWay}" x:Name="PaneHeader" HorizontalTextAlignment="Center" Margin="12,8" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                    <ItemsControl x:Name="InfoList" Grid.Row="1">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Padding="12,4">
+                                                    <TextBlock Text="{Binding Path=Key}" FontWeight="SemiBold" FontSize="14" Padding="0,0,4,0" />
+                                                    <TextBlock Text="{Binding Path=Value}" Style="{ThemeResource BodyTextBlockStyle}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </SplitView.Pane>
+                        </SplitView>
                     </Border>
 
                     <GridView x:Name="CategoryGrid"
                               Grid.Row="1"
                               VerticalAlignment="Bottom"
                               Margin="0,8,0,0"
-                              Background="{StaticResource SystemControlAcrylicElementBrush}"
+                              Background="{ThemeResource SystemControlAcrylicElementBrush}"
                               MinWidth="400" MaxHeight="100"
                               SelectionMode="None" IsItemClickEnabled="True"
                               CanDragItems="False" AllowDrop="False"
@@ -246,7 +284,7 @@
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="ws:StorageFolder">
                                 <StackPanel Width = '200' Orientation = 'Horizontal' Margin="8">
-                                    <TextBlock Style = '{StaticResource BodyTextBlockStyle}' Margin = '12,0,12,0' Text = '{x:Bind DisplayName}'
+                                    <TextBlock Style = '{ThemeResource BodyTextBlockStyle}' Margin = '12,0,12,0' Text = '{x:Bind DisplayName}'
                                        TextTrimming="CharacterEllipsis" MaxLines="1" MaxWidth="200" />
                                 </StackPanel>
                             </DataTemplate>

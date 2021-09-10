@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
 
@@ -30,7 +32,10 @@ namespace App1
                 {
                     StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", value);
                     appData.Values["path"] = value.Path;
-                    App.MainPage.FolderChanged();
+                    if (((App.CurrentWindow.Content as Frame).Content as MainPage) != null)
+                    {
+                        ((App.CurrentWindow.Content as Frame).Content as MainPage).FolderChanged();
+                    }
                     GetFiles(value, true);
                     GetFolders(value);
                 }
@@ -196,6 +201,54 @@ namespace App1
 
             _ = CurrentFiles.Remove(file);
             lastCommand = (file, folder);
+        }
+
+        public async void DeleteFile(StorageFile file)
+        {
+            if (file == null) { throw new ArgumentNullException(message: "File is null", null); }
+
+            await file.DeleteAsync();
+            _ = CurrentFiles.Remove(file);
+            lastCommand = (null, null);
+        }
+
+        public async Task<Dictionary<string, string>> GetFileInfo(StorageFile file)
+        {
+            if (file == null) { return null; }
+
+            ImageProperties imageProps = await file.Properties.GetImagePropertiesAsync();
+            string imageSize = string.Format("{0} x {1}", imageProps.Height, imageProps.Width);
+
+            BasicProperties basicProps = await file.GetBasicPropertiesAsync();
+            string fileSize = string.Format(new FileSizeFormatProvider(), "{0:fs}", basicProps.Size);
+
+            string authorProperty = "System.Author";
+            string dateAcquiredProperty = "System.DateAcquired";
+            List<string> propertiesName = new()
+            {
+                authorProperty,
+                dateAcquiredProperty
+            };
+
+            Dictionary<string, string> outputList = new();
+
+            IDictionary<string, object> extraProperties = await file.Properties.RetrievePropertiesAsync(propertiesName);
+            object propValue = extraProperties[authorProperty];
+            if (propValue != null)
+            {
+                outputList.Add("Artist: ", propValue.ToString());
+            }
+            outputList.Add("Created: ", file.DateCreated.DateTime.ToString("g"));
+            propValue = extraProperties[dateAcquiredProperty];
+            if (propValue != null)
+            {
+                DateTimeOffset offset = (DateTimeOffset)propValue;
+                outputList.Add("Downloaded: ", offset.DateTime.ToString("g"));
+            }
+            outputList.Add("File Size: ", fileSize);
+            outputList.Add("Image Size:", imageSize);
+
+            return outputList;
         }
 
         public async void NewFolder(string name, StorageFolder folder)
