@@ -1,30 +1,24 @@
-﻿using Microsoft.UI.Xaml;
+﻿using Microsoft.UI;
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
-using System.Runtime.InteropServices;
-using Windows.Storage;
-using Windows.Storage.Pickers;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI;
-
-#if !UNIVERSAL
-using WinRT;
-#endif
+using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.Storage.Pickers;
+using Windows.System;
+using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace App1
 {
-    [ComImport, Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    public interface IInitializeWithWindow
-    {
-        void Initialize([In] IntPtr hwnd);
-    }
-
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
@@ -53,7 +47,7 @@ namespace App1
                 }
             }
 
-            if (viewModel.CurrentFile != null)
+            if (viewModel.CurrentFolder != null)
             {
                 FolderChanged();
             }
@@ -75,11 +69,8 @@ namespace App1
 
 #if !UNIVERSAL
             // When running on win32, FileOpenPicker needs to know the top-level hwnd via IInitializeWithWindow::Initialize.
-            if (App.CurrentWindow != null)
-            {
-                IInitializeWithWindow initializeWithWindowWrapper = folderPicker.As<IInitializeWithWindow>();
-                initializeWithWindowWrapper.Initialize(App.HWND);
-            }
+            IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.CurrentWindow);
+            WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
 #endif
 
             viewModel.CurrentFolder = await folderPicker.PickSingleFolderAsync();
@@ -91,6 +82,7 @@ namespace App1
             ConvertButton.IsEnabled = true;
             NewCategoryButton.IsEnabled = true;
             ImagePreview.Source = null;
+            fileList.SelectedIndex = 0;
         }
 
         private async void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -110,7 +102,8 @@ namespace App1
                 }
             }
 
-            InfoList.ItemsSource = await viewModel.GetFileInfo(viewModel.CurrentFile);
+            StaticInfoList.ItemsSource = await viewModel.GetFileInfo();
+            //InfoList.ItemsSource = await viewModel.GetEditableFileInfo();
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
@@ -144,11 +137,12 @@ namespace App1
             NewCatAddButton.IsEnabled = NewCatName.Text.Length != 0;
         }
 
-        private async void CategoryGrid_ItemClick(object sender, ItemClickEventArgs e)
+        private async void MoveTo(StorageFolder folder)
         {
+            int idx = viewModel.CurrentFiles.IndexOf(viewModel.CurrentFile);
             try
             {
-                await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder);
+                await viewModel.MoveFile(viewModel.CurrentFile, folder);
             }
             catch
             {
@@ -162,7 +156,7 @@ namespace App1
                     switch (result)
                     {
                         case ContentDialogResult.Primary:
-                            await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
+                            await viewModel.MoveFile(viewModel.CurrentFile, folder, NameCollisionOption.GenerateUniqueName);
                             ShowNotificationBox();
                             UndoButton.IsEnabled = true;
                             break;
@@ -170,7 +164,7 @@ namespace App1
                             ShowNotificationBox(true);
                             break;
                         case ContentDialogResult.Secondary:
-                            await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.ReplaceExisting);
+                            await viewModel.MoveFile(viewModel.CurrentFile, folder, NameCollisionOption.ReplaceExisting);
                             UndoButton.IsEnabled = true;
                             break;
                         default:
@@ -186,24 +180,28 @@ namespace App1
                     else if (viewModel.MoveConflictOption == 1)
                     {
                         StorageFile currentFile = viewModel.CurrentFile;
-                        await viewModel.MoveFile(currentFile, e.ClickedItem as StorageFolder, NameCollisionOption.GenerateUniqueName);
+                        await viewModel.MoveFile(currentFile, folder, NameCollisionOption.GenerateUniqueName);
                         ShowNotificationBox();
                     }
                     else if (viewModel.MoveConflictOption == 2)
                     {
-                        await viewModel.MoveFile(viewModel.CurrentFile, e.ClickedItem as StorageFolder, NameCollisionOption.ReplaceExisting);
+                        await viewModel.MoveFile(viewModel.CurrentFile, folder, NameCollisionOption.ReplaceExisting);
                         ShowNotificationBox(true);
                     }
-
-                    ShowNotificationBox();
-                    UndoButton.IsEnabled = true;
                 }
             }
             finally
             {
-                fileList.Focus(FocusState.Programmatic);
+                fileList.SelectedIndex = idx;
+                _ = fileList.Focus(FocusState.Programmatic);
+                UndoButton.IsEnabled = true;
             }
 
+        }
+
+        private void CategoryGrid_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            MoveTo(e.ClickedItem as StorageFolder);
         }
 
         private void RefreshCategoriesButton_Click(object sender, RoutedEventArgs e)
@@ -250,7 +248,7 @@ namespace App1
 
         private void NewCatName_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == Windows.System.VirtualKey.Enter)
+            if (e.Key == VirtualKey.Enter)
             {
                 NewCategoryAddButton_Click(sender, e);
             }
@@ -258,7 +256,7 @@ namespace App1
 
         private void PathBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == Windows.System.VirtualKey.Enter)
+            if (e.Key == VirtualKey.Enter)
             {
                 PathButton_Click(sender, e);
             }
@@ -282,7 +280,7 @@ namespace App1
         private void NotifCloseButton_Click(object sender, RoutedEventArgs e)
         {
             NotificationBox.Visibility = Visibility.Collapsed;
-            fileList.Focus(FocusState.Programmatic);
+            _ = fileList.Focus(FocusState.Programmatic);
         }
 
         private void ResetDialogs_Click(object sender, RoutedEventArgs e)
@@ -329,16 +327,60 @@ namespace App1
 
         private void FileList_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == Windows.System.VirtualKey.Left && fileList.SelectedIndex > 0)
+            if (e.Handled == false)
             {
-                fileList.SelectedIndex -= 1;
-            }
-            else if (e.Key == Windows.System.VirtualKey.Right && fileList.SelectedIndex < fileList.Items.Count)
-            {
-                fileList.SelectedIndex += 1;
-            } else if (e.Key == Windows.System.VirtualKey.Delete && fileList.SelectedIndex != -1)
-            {
-                viewModel.DeleteFile(viewModel.CurrentFile);
+                if (e.Key == VirtualKey.Left && fileList.SelectedIndex > 0)
+                {
+                    fileList.SelectedIndex -= 1;
+                }
+                else if (e.Key == VirtualKey.Right && fileList.SelectedIndex < fileList.Items.Count)
+                {
+                    fileList.SelectedIndex += 1;
+                }
+                else if (e.Key == VirtualKey.Delete && fileList.SelectedIndex != -1)
+                {
+                    viewModel.DeleteFile(viewModel.CurrentFile);
+                }
+                else if (e.Key == VirtualKey.Number1 &&
+                    (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
+                {
+                    if (viewModel.Categories.ElementAt(0) != null)
+                    {
+                        MoveTo(viewModel.Categories.ElementAt(0));
+                    }
+                }
+                else if (e.Key == VirtualKey.Number2 &&
+                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
+                {
+                    if (viewModel.Categories.ElementAt(1) != null)
+                    {
+                        MoveTo(viewModel.Categories.ElementAt(1));
+                    }
+                }
+                else if (e.Key == VirtualKey.Number3 &&
+                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
+                {
+                    if (viewModel.Categories.ElementAt(2) != null)
+                    {
+                        MoveTo(viewModel.Categories.ElementAt(2));
+                    }
+                }
+                else if (e.Key == VirtualKey.Number4 &&
+                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
+                {
+                    if (viewModel.Categories.ElementAt(3) != null)
+                    {
+                        MoveTo(viewModel.Categories.ElementAt(3));
+                    }
+                }
+                else if (e.Key == VirtualKey.Number5 &&
+                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
+                {
+                    if (viewModel.Categories.ElementAt(4) != null)
+                    {
+                        MoveTo(viewModel.Categories.ElementAt(4));
+                    }
+                }
             }
         }
 
@@ -367,5 +409,43 @@ namespace App1
         {
             ImageSplit.IsPaneOpen = true;
         }
+
+        //private async void TextBox_KeyUp(object sender, KeyRoutedEventArgs e)
+        //{
+        //    TextBox box = sender as TextBox;
+        //    string tag = box.Tag as string;
+        //    if (e.Key == VirtualKey.Enter)
+        //    {
+        //        if (tag.Contains("Artist"))
+        //        {
+        //            List<KeyValuePair<string, object>> propertyToSave = new()
+        //            {
+        //                new KeyValuePair<string, object>("System.Author", box.Text)
+        //            };
+
+        //            await viewModel.CurrentFile.Properties.SavePropertiesAsync(propertyToSave);
+        //        }
+        //        else if (tag.Contains("Title"))
+        //        {
+        //            List<KeyValuePair<string, object>> propertyToSave = new()
+        //            {
+        //                new KeyValuePair<string, object>("System.Title", box.Text),
+        //                new KeyValuePair<string, object>("System.Subject", box.Text)
+        //            };
+
+        //            await viewModel.CurrentFile.Properties.SavePropertiesAsync(propertyToSave);
+        //        }
+        //        else if (tag.Contains("Keyword"))
+        //        {
+        //            ImageProperties imageProps = await viewModel.CurrentFile.Properties.GetImagePropertiesAsync();
+        //            string[] keywords = box.Text.Split(",");
+        //            for (int i = 0; i < keywords.Length; i++)
+        //            {
+        //                imageProps.Keywords.Add(keywords[i]);
+        //            }
+        //            await imageProps.SavePropertiesAsync();
+        //        }
+        //    }
+        //}
     }
 }

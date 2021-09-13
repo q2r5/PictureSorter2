@@ -14,10 +14,6 @@ namespace App1
     {
         public static Window CurrentWindow { get; private set; }
 
-        //public static MainPage MainPage { get; private set; }
-
-        public static IntPtr HWND => WinRT.Interop.WindowNative.GetWindowHandle(CurrentWindow);
-
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().

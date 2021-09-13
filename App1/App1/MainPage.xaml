@@ -8,8 +8,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
- 
-    <Grid x:Name="LayoutRoot">
+
+    <Grid x:Name="LayoutRoot" KeyUp="FileList_KeyUp">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -156,6 +156,7 @@
                 <AppBarButton x:Name="SettingsButton" Label="Settings" Icon="Setting" ToolTipService.ToolTip="Settings">
                     <AppBarButton.Flyout>
                         <MenuFlyout x:Name="SettingsMenu">
+                            <ToggleMenuFlyoutItem x:Name="UseIndexer" Text="Use Search Indexer" IsChecked="{x:Bind viewModel.UseSearchIndexer, Mode=TwoWay}" />
                             <MenuFlyoutItem x:Name="ResetDialogs" Text="Reset Dialogs" Click="ResetDialogs_Click" />
                         </MenuFlyout>
                     </AppBarButton.Flyout>
@@ -173,8 +174,7 @@
                           AllowDrop="False"
                           VerticalAlignment="Stretch"
                           SelectionChanged="FileList_SelectionChanged"
-                          ItemsSource="{x:Bind viewModel.CurrentFiles, Mode=OneWay}"
-                          KeyUp="FileList_KeyUp">
+                          ItemsSource="{x:Bind viewModel.CurrentFiles, Mode=OneWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="ws:StorageFile">
                             <Grid Margin="0,12" AutomationProperties.Name="{x:Bind DisplayName}" ToolTipService.ToolTip="{x:Bind DisplayName}">
@@ -243,8 +243,16 @@
                                             <AppBarButton.Icon>
                                                 <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE946;" />
                                             </AppBarButton.Icon>
+                                            <AppBarButton.KeyboardAccelerators>
+                                                <KeyboardAccelerator Modifiers="Control" Key="I" />
+                                            </AppBarButton.KeyboardAccelerators>
                                         </AppBarButton>
-                                        <AppBarButton x:Name="DeleteImageButton" Icon="Delete" Label="Delete" Foreground="Red" Click="DeleteImageButton_Click" />
+                                        <AppBarButton x:Name="DeleteImageButton" Icon="Delete" Label="Delete" Foreground="Red" Click="DeleteImageButton_Click">
+                                            <AppBarButton.KeyboardAccelerators>
+                                                <KeyboardAccelerator Modifiers="Control" Key="Back" />
+                                                <KeyboardAccelerator Key="Delete" />
+                                            </AppBarButton.KeyboardAccelerators>
+                                        </AppBarButton>
                                     </CommandBar>
                                 </Grid>
                             </SplitView.Content>
@@ -252,10 +260,11 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="{x:Bind viewModel.CurrentFile.DisplayName, Mode=OneWay}" x:Name="PaneHeader" HorizontalTextAlignment="Center" Margin="12,8" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                                    <ItemsControl x:Name="InfoList" Grid.Row="1">
+                                    <TextBlock Text="{x:Bind viewModel.CurrentFile.DisplayName, Mode=OneWay}" x:Name="PaneHeader" HorizontalTextAlignment="Center" Padding="12,8" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                    <ItemsControl x:Name="StaticInfoList" Grid.Row="1">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" Padding="12,4">
@@ -265,6 +274,13 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
+                                    <!--<ItemsControl x:Name="InfoList" Grid.Row="2" Margin="12,4">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBox Header="{Binding Path=Key}" Text="{Binding Path=Value}" Tag="{Binding Path=Key}" KeyUp="TextBox_KeyUp" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>-->
                                 </Grid>
                             </SplitView.Pane>
                         </SplitView>

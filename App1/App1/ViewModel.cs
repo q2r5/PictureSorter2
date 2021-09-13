@@ -99,7 +99,13 @@ namespace App1
             }
         }
 
-        private (StorageFile, StorageFolder) lastCommand;
+        public bool UseSearchIndexer
+        {
+            get => (bool?)appData.Values["UseSearchIndexer"] ?? true;
+            set => appData.Values["UseSearchIndexer"] = value;
+        }
+
+        private (StorageFile, StorageFolder, int) lastCommand;
         #endregion
 
         #region Initializers
@@ -130,7 +136,7 @@ namespace App1
             QueryOptions query = new(CommonFileQuery.OrderByName, fileTypeFilter: FilteredFileTypes)
             {
                 FolderDepth = FolderDepth.Shallow,
-                IndexerOption = IndexerOption.UseIndexerWhenAvailable
+                IndexerOption = UseSearchIndexer ? IndexerOption.UseIndexerWhenAvailable : IndexerOption.DoNotUseIndexer
             };
             StorageFileQueryResult result = folder.CreateFileQueryWithOptions(query);
             IReadOnlyList<StorageFile> files = await result.GetFilesAsync();
@@ -188,6 +194,10 @@ namespace App1
 
         public async Task MoveFile(StorageFile file, StorageFolder folder, NameCollisionOption collisionOption = NameCollisionOption.FailIfExists)
         {
+            if (file == null)
+            {
+                file = CurrentFile;
+            }
             if (file == null || folder == null) { throw new ArgumentNullException(message: "file or folder was null", null); }
 
             try
@@ -198,9 +208,12 @@ namespace App1
             {
                 throw;
             }
-
-            _ = CurrentFiles.Remove(file);
-            lastCommand = (file, folder);
+            finally
+            {
+                int idx = CurrentFiles.IndexOf(file);
+                _ = CurrentFiles.Remove(file);
+                lastCommand = (file, folder, idx);
+            }
         }
 
         public async void DeleteFile(StorageFile file)
@@ -209,12 +222,21 @@ namespace App1
 
             await file.DeleteAsync();
             _ = CurrentFiles.Remove(file);
-            lastCommand = (null, null);
+            lastCommand = (null, null, -1);
         }
 
-        public async Task<Dictionary<string, string>> GetFileInfo(StorageFile file)
+        public async Task<Dictionary<string, string>> GetFileInfo(StorageFile file = null)
         {
-            if (file == null) { return null; }
+            if (file == null && CurrentFile != null)
+            {
+                file = CurrentFile;
+            }
+
+            // If `file` is still null, bail.
+            if (file == null)
+            {
+                return null;
+            }
 
             ImageProperties imageProps = await file.Properties.GetImagePropertiesAsync();
             string imageSize = string.Format("{0} x {1}", imageProps.Height, imageProps.Width);
@@ -222,31 +244,38 @@ namespace App1
             BasicProperties basicProps = await file.GetBasicPropertiesAsync();
             string fileSize = string.Format(new FileSizeFormatProvider(), "{0:fs}", basicProps.Size);
 
-            string authorProperty = "System.Author";
-            string dateAcquiredProperty = "System.DateAcquired";
-            List<string> propertiesName = new()
+            Dictionary<string, string> outputList = new();
+            outputList.Add("Created:", file.DateCreated.DateTime.ToString("g"));
+            outputList.Add("File Size:", fileSize);
+            outputList.Add("Image Size:", imageSize);
+
+            return outputList;
+        }
+
+        public async Task<Dictionary<string, string>> GetEditableFileInfo(StorageFile file = null)
+        {
+            if (file == null && CurrentFile != null)
             {
-                authorProperty,
-                dateAcquiredProperty
-            };
+                file = CurrentFile;
+            }
+
+            // If `file` is still null, bail.
+            if (file == null)
+            {
+                return null;
+            }
+
+            ImageProperties imageProps = await file.Properties.GetImagePropertiesAsync();
+            DocumentProperties docProps = await file.Properties.GetDocumentPropertiesAsync();
 
             Dictionary<string, string> outputList = new();
 
-            IDictionary<string, object> extraProperties = await file.Properties.RetrievePropertiesAsync(propertiesName);
-            object propValue = extraProperties[authorProperty];
-            if (propValue != null)
-            {
-                outputList.Add("Artist: ", propValue.ToString());
-            }
-            outputList.Add("Created: ", file.DateCreated.DateTime.ToString("g"));
-            propValue = extraProperties[dateAcquiredProperty];
-            if (propValue != null)
-            {
-                DateTimeOffset offset = (DateTimeOffset)propValue;
-                outputList.Add("Downloaded: ", offset.DateTime.ToString("g"));
-            }
-            outputList.Add("File Size: ", fileSize);
-            outputList.Add("Image Size:", imageSize);
+            string keywords = string.Join(",", imageProps.Keywords);
+            string artists = string.Join(",", docProps.Author);
+
+            outputList.Add("Title:", imageProps.Title);
+            outputList.Add("Artist(s)", artists);
+            outputList.Add("Keywords", keywords);
 
             return outputList;
         }
@@ -327,6 +356,7 @@ namespace App1
         {
             if (CurrentFiles.Contains(lastCommand.Item1)) { return; }
             await MoveFile(lastCommand.Item1, CurrentFolder);
+            CurrentFiles.Insert(lastCommand.Item3, lastCommand.Item1);
         }
 
         public async void Redo()
