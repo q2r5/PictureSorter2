@@ -1,15 +1,15 @@
 ﻿using Microsoft.UI;
 using Microsoft.UI.Input;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Windows.ApplicationModel;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.System;
 using Windows.UI.Core;
@@ -33,8 +33,35 @@ namespace App1
         public MainPage()
         {
             InitializeComponent();
-            App.CurrentWindow.SetTitleBar(AppTitleBar);
-            App.CurrentWindow.Title = Title;
+
+            // If we're using the custom titlebar
+            if (viewModel.UseTitlebar && !AppWindowTitleBar.IsCustomizationsSupported())
+            {
+                if (App.CurrentWindow.m_appWindow != null)
+                {
+                    App.CurrentWindow.m_appWindow.Title = Title;
+                }
+                else
+                {
+                    App.CurrentWindow.Title = Title;
+                }
+                App.CurrentWindow.ExtendsContentIntoTitleBar = true;
+                App.CurrentWindow.SetTitleBar(AppTitleBar);
+                AppTitleBarWrapper.Visibility = Visibility.Visible;
+                TitlebarOpt.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                if (App.CurrentWindow.m_appWindow != null)
+                {
+                    App.CurrentWindow.m_appWindow.Title = Title;
+                }
+                else
+                {
+                    App.CurrentWindow.Title = Title;
+                }
+                CommandMenu.Visibility = Visibility.Visible;
+            }
 
             foreach (string fileType in viewModel.FilteredFileTypes)
             {
@@ -408,6 +435,32 @@ namespace App1
         private void ImageInfoButton_Click(object sender, RoutedEventArgs e)
         {
             ImageSplit.IsPaneOpen = true;
+        }
+
+        private async void AboutItem_Click(object sender, RoutedEventArgs e)
+        {
+            ContentDialog aboutDialog = new() {
+                XamlRoot = XamlRoot,
+                Title = Title,
+                CloseButtonText = "Ok",
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            StackPanel versionInfo = new()
+            {
+                Orientation = Orientation.Vertical
+            };
+            versionInfo.Children.Add(new TextBlock()
+            {
+                Text = string.Format("Version: {0}.{1}.{2}.{3}",
+                    Package.Current.Id.Version.Major,
+                    Package.Current.Id.Version.Minor,
+                    Package.Current.Id.Version.Build,
+                    Package.Current.Id.Version.Revision)
+            });
+            aboutDialog.Content = versionInfo;
+
+            await aboutDialog.ShowAsync();
         }
 
         //private async void TextBox_KeyUp(object sender, KeyRoutedEventArgs e)

@@ -1,5 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -32,9 +31,9 @@ namespace App1
                 {
                     StorageApplicationPermissions.FutureAccessList.AddOrReplace("PickedFolderToken", value);
                     appData.Values["path"] = value.Path;
-                    if (((App.CurrentWindow.Content as Frame).Content as MainPage) != null)
+                    if ((App.CurrentWindow.ContentFrame.Content as MainPage) != null)
                     {
-                        ((App.CurrentWindow.Content as Frame).Content as MainPage).FolderChanged();
+                        (App.CurrentWindow.ContentFrame.Content as MainPage).FolderChanged();
                     }
                     GetFiles(value, true);
                     GetFolders(value);
@@ -103,6 +102,12 @@ namespace App1
         {
             get => (bool?)appData.Values["UseSearchIndexer"] ?? true;
             set => appData.Values["UseSearchIndexer"] = value;
+        }
+
+        public bool UseTitlebar
+        {
+            get => (bool?)appData.Values["UseTitlebar"] ?? true;
+            set => appData.Values["UseTitlebar"] = value;
         }
 
         private (StorageFile, StorageFolder, int) lastCommand;
