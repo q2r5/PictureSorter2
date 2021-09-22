@@ -35,20 +35,20 @@ namespace App1
             InitializeComponent();
 
             // If we're using the custom titlebar
-            if (viewModel.UseTitlebar && !AppWindowTitleBar.IsCustomizationsSupported())
+            if (viewModel.UseTitlebar)
             {
                 if (App.CurrentWindow.m_appWindow != null)
                 {
                     App.CurrentWindow.m_appWindow.Title = Title;
+                    App.CurrentWindow.m_appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+                    App.CurrentWindow.m_appWindow.TitleBar.BackgroundColor = Colors.Transparent;
                 }
                 else
                 {
                     App.CurrentWindow.Title = Title;
+                    App.CurrentWindow.ExtendsContentIntoTitleBar = true;
                 }
-                App.CurrentWindow.ExtendsContentIntoTitleBar = true;
                 App.CurrentWindow.SetTitleBar(AppTitleBar);
-                AppTitleBarWrapper.Visibility = Visibility.Visible;
-                TitlebarOpt.Visibility = Visibility.Visible;
             }
             else
             {
@@ -60,7 +60,7 @@ namespace App1
                 {
                     App.CurrentWindow.Title = Title;
                 }
-                CommandMenu.Visibility = Visibility.Visible;
+                AppTitleBarWrapper.Visibility = Visibility.Collapsed;
             }
 
             foreach (string fileType in viewModel.FilteredFileTypes)

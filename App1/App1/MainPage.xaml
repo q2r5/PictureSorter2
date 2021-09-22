@@ -11,7 +11,7 @@
 
     <Grid x:Name="LayoutRoot" KeyUp="FileList_KeyUp">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" MinHeight="32" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -27,7 +27,6 @@
                         <Setter Target="MainView.DisplayMode" Value="Inline"/>
                         <Setter Target="MainView.IsPaneOpen" Value="True"/>
                         <Setter Target="CommandMenu.Visibility" Value="Collapsed" />
-                        <Setter Target="Menu.Visibility" Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -38,18 +37,18 @@
                     <VisualState.Setters>
                         <Setter Target="MainView.DisplayMode" Value="CompactInline" />
                         <Setter Target="MainView.IsPaneOpen" Value="False" />
+                        <Setter Target="CommandMenu.Visibility" Value="Visible" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
-        <Grid x:Name="AppTitleBarWrapper" Visibility="Collapsed">
+        <Grid x:Name="AppTitleBarWrapper">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel x:Name="AppTitleBar" Grid.Column="1" Orientation="Horizontal">
+            <StackPanel x:Name="AppTitleBar" Grid.Column="0" Orientation="Horizontal">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8B9;"
                       HorizontalAlignment="Left" VerticalAlignment="Center"
                       Width="20" Height="20" Margin="8,0" />
@@ -57,14 +56,14 @@
                            VerticalAlignment="Center"
                            Style="{ThemeResource BaseTextBlockStyle}" />
             </StackPanel>
-            <Button x:Name="Menu" Grid.Column="0"
+            <!--<Button x:Name="Menu" Grid.Column="0"
                     HorizontalAlignment="Left" VerticalAlignment="Center"
                     Click="Menu_Click">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
-            </Button>
+            </Button>-->
         </Grid>
 
-        <CommandBar Grid.Row="1">
+        <CommandBar Grid.Row="1" OverflowButtonVisibility="Collapsed">
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal">
                     <AppBarButton x:Name="CommandMenu" Click="Menu_Click" Visibility="Collapsed">
@@ -195,7 +194,7 @@
                     <AppBarButton.Flyout>
                         <MenuFlyout x:Name="SettingsMenu">
                             <ToggleMenuFlyoutItem x:Name="UseIndexer" Text="Use Search Indexer" IsChecked="{x:Bind viewModel.UseSearchIndexer, Mode=TwoWay}" />
-                            <ToggleMenuFlyoutItem x:Name="TitlebarOpt" Text="Use Custom Titlebar" IsChecked="{x:Bind viewModel.UseTitlebar, Mode=TwoWay}" Visibility="Collapsed" />
+                            <ToggleMenuFlyoutItem x:Name="TitlebarOpt" Text="Use Custom Titlebar" IsChecked="{x:Bind viewModel.UseTitlebar, Mode=TwoWay}" />
                             <MenuFlyoutItem x:Name="ResetDialogs" Text="Reset Dialogs" Click="ResetDialogs_Click" />
                             <MenuFlyoutItem x:Name="AboutItem" Text="About" Click="AboutItem_Click" />
                         </MenuFlyout>
