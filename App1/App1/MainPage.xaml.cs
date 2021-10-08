@@ -26,9 +26,9 @@ namespace App1
     {
         private readonly MainViewModel viewModel = MainViewModel.Instance;
 
-        private bool FilterChanged;
+        private readonly Flyout pathBoxFlyout;
 
-        private readonly string Title = "(New) Picture Sorter";
+        private bool FilterChanged;
 
         public MainPage()
         {
@@ -37,30 +37,32 @@ namespace App1
             // If we're using the custom titlebar
             if (viewModel.UseTitlebar)
             {
-                if (App.CurrentWindow.m_appWindow != null)
+                if (App.CurrentWindow.m_appWindow != null && AppWindowTitleBar.IsCustomizationSupported())
                 {
-                    App.CurrentWindow.m_appWindow.Title = Title;
-                    App.CurrentWindow.m_appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
-                    App.CurrentWindow.m_appWindow.TitleBar.BackgroundColor = Colors.Transparent;
+                    AppWindowTitleBar titleBar = App.CurrentWindow.m_appWindow.TitleBar;
+                    titleBar.ButtonBackgroundColor = Colors.Transparent;
+                    titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                    App.CurrentWindow.m_appWindow.Title = viewModel.Title;
+                    titleBar.ExtendsContentIntoTitleBar = true;
                 }
                 else
                 {
-                    App.CurrentWindow.Title = Title;
+                    App.CurrentWindow.Title = viewModel.Title;
                     App.CurrentWindow.ExtendsContentIntoTitleBar = true;
                 }
                 App.CurrentWindow.SetTitleBar(AppTitleBar);
             }
             else
             {
-                if (App.CurrentWindow.m_appWindow != null)
+                if (App.CurrentWindow.m_appWindow != null && AppWindowTitleBar.IsCustomizationSupported())
                 {
-                    App.CurrentWindow.m_appWindow.Title = Title;
+                    App.CurrentWindow.m_appWindow.Title = viewModel.Title;
                 }
                 else
                 {
-                    App.CurrentWindow.Title = Title;
+                    App.CurrentWindow.Title = viewModel.Title;
                 }
-                AppTitleBarWrapper.Visibility = Visibility.Collapsed;
+                AppTitleBar.Visibility = Visibility.Collapsed;
             }
 
             foreach (string fileType in viewModel.FilteredFileTypes)
@@ -80,6 +82,10 @@ namespace App1
             }
 
             NotificationBox.Translation += new Vector3(0, 0, 32);
+            ImageBorder.Translation += new Vector3(0, 0, 8);
+            CategoryGrid.Translation += new Vector3(0, 0, 8);
+            SharedThemeShadow.Receivers.Add(LayoutRoot);
+            pathBoxFlyout = Resources["PathBoxFlyout"] as Flyout;
         }
 
         private async void PickFolderButton_Click(object sender, RoutedEventArgs e)
@@ -107,9 +113,18 @@ namespace App1
         {
             RefreshButton.IsEnabled = true;
             ConvertButton.IsEnabled = true;
+            //ConvertMenu.IsEnabled = true;
             NewCategoryButton.IsEnabled = true;
             ImagePreview.Source = null;
             fileList.SelectedIndex = 0;
+            if (App.CurrentWindow.m_appWindow != null && AppWindowTitleBar.IsCustomizationSupported())
+            {
+                App.CurrentWindow.m_appWindow.Title = viewModel.Title;
+            }
+            else
+            {
+                App.CurrentWindow.Title = viewModel.Title;
+            }
         }
 
         private async void FileList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -291,7 +306,7 @@ namespace App1
 
         private void PathButton_Click(object sender, RoutedEventArgs e)
         {
-            FolderHeader.ContextFlyout.Hide();
+            pathBoxFlyout.Hide();
             viewModel.SetFolder(PathBox.Text);
             if (viewModel.CurrentFolder != null)
             {
@@ -356,57 +371,71 @@ namespace App1
         {
             if (e.Handled == false)
             {
-                if (e.Key == VirtualKey.Left && fileList.SelectedIndex > 0)
+                switch (e.Key)
                 {
-                    fileList.SelectedIndex -= 1;
-                }
-                else if (e.Key == VirtualKey.Right && fileList.SelectedIndex < fileList.Items.Count)
-                {
-                    fileList.SelectedIndex += 1;
-                }
-                else if (e.Key == VirtualKey.Delete && fileList.SelectedIndex != -1)
-                {
-                    viewModel.DeleteFile(viewModel.CurrentFile);
-                }
-                else if (e.Key == VirtualKey.Number1 &&
-                    (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
-                {
-                    if (viewModel.Categories.ElementAt(0) != null)
-                    {
-                        MoveTo(viewModel.Categories.ElementAt(0));
-                    }
-                }
-                else if (e.Key == VirtualKey.Number2 &&
-                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
-                {
-                    if (viewModel.Categories.ElementAt(1) != null)
-                    {
-                        MoveTo(viewModel.Categories.ElementAt(1));
-                    }
-                }
-                else if (e.Key == VirtualKey.Number3 &&
-                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
-                {
-                    if (viewModel.Categories.ElementAt(2) != null)
-                    {
-                        MoveTo(viewModel.Categories.ElementAt(2));
-                    }
-                }
-                else if (e.Key == VirtualKey.Number4 &&
-                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
-                {
-                    if (viewModel.Categories.ElementAt(3) != null)
-                    {
-                        MoveTo(viewModel.Categories.ElementAt(3));
-                    }
-                }
-                else if (e.Key == VirtualKey.Number5 &&
-                        (KeyboardInput.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down)
-                {
-                    if (viewModel.Categories.ElementAt(4) != null)
-                    {
-                        MoveTo(viewModel.Categories.ElementAt(4));
-                    }
+                    case VirtualKey.Left:
+                        if (fileList.SelectedIndex > 0)
+                        {
+                            fileList.SelectedIndex--;
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Right:
+                        if (fileList.SelectedIndex < fileList.Items.Count)
+                        {
+                            fileList.SelectedIndex++;
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Delete:
+                        if (fileList.SelectedIndex != -1)
+                        {
+                            viewModel.DeleteFile(viewModel.CurrentFile);
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Number1:
+                        if ((InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down
+                            && viewModel.Categories.ElementAt(0) != null)
+                        {
+                            MoveTo(viewModel.Categories.ElementAt(0));
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Number2:
+                        if ((InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down
+                            && viewModel.Categories.ElementAt(1) != null)
+                        {
+                            MoveTo(viewModel.Categories.ElementAt(1));
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Number3:
+                        if ((InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down
+                            && viewModel.Categories.ElementAt(2) != null)
+                        {
+                            MoveTo(viewModel.Categories.ElementAt(2));
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Number4:
+                        if ((InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down
+                            && viewModel.Categories.ElementAt(3) != null)
+                        {
+                            MoveTo(viewModel.Categories.ElementAt(3));
+                            e.Handled = true;
+                        }
+                        return;
+                    case VirtualKey.Number5:
+                        if ((InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down
+                            && viewModel.Categories.ElementAt(4) != null)
+                        {
+                            MoveTo(viewModel.Categories.ElementAt(4));
+                            e.Handled = true;
+                        }
+                        return;
+                    default:
+                        break;
                 }
             }
         }
@@ -439,9 +468,10 @@ namespace App1
 
         private async void AboutItem_Click(object sender, RoutedEventArgs e)
         {
-            ContentDialog aboutDialog = new() {
+            ContentDialog aboutDialog = new()
+            {
                 XamlRoot = XamlRoot,
-                Title = Title,
+                Title = "(New) Picture Sorter",
                 CloseButtonText = "Ok",
                 DefaultButton = ContentDialogButton.Close
             };
@@ -461,6 +491,16 @@ namespace App1
             aboutDialog.Content = versionInfo;
 
             await aboutDialog.ShowAsync();
+        }
+
+        private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Exit();
+        }
+
+        private void OpenFolderQuickly_Click(object sender, RoutedEventArgs e)
+        {
+            pathBoxFlyout.ShowAt(PickFolderButton);
         }
 
         //private async void TextBox_KeyUp(object sender, KeyRoutedEventArgs e)

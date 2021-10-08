@@ -7,11 +7,22 @@
     xmlns:c="using:System.Collections"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <Flyout x:Key="PathBoxFlyout">
+            <StackPanel Orientation="Horizontal">
+                <TextBox x:Name="PathBox" Header="Path" MinWidth="300" MaxLength="255" Text="{x:Bind viewModel.CurrentFolder.Path, Mode=OneWay}" TextChanged="PathBox_TextChanged" KeyUp="PathBox_KeyUp" AllowFocusOnInteraction="True" />
+                <Button x:Name="PathButton" Content="Go" Margin="8,0,0,0" VerticalAlignment="Bottom" Click="PathButton_Click" IsEnabled="False" />
+            </StackPanel>
+        </Flyout>
+        <ThemeShadow x:Name="SharedThemeShadow" />
+    </Page.Resources>
 
     <Grid x:Name="LayoutRoot" KeyUp="FileList_KeyUp">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" MinHeight="32" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -26,6 +37,7 @@
                     <VisualState.Setters>
                         <Setter Target="MainView.DisplayMode" Value="Inline"/>
                         <Setter Target="MainView.IsPaneOpen" Value="True"/>
+                        <Setter Target="MainView.PaneBackground" Value="Transparent" />
                         <Setter Target="CommandMenu.Visibility" Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
@@ -38,65 +50,139 @@
                         <Setter Target="MainView.DisplayMode" Value="CompactInline" />
                         <Setter Target="MainView.IsPaneOpen" Value="False" />
                         <Setter Target="CommandMenu.Visibility" Value="Visible" />
+                        <Setter Target="MenuBar.OverflowButtonVisibility" Value="Visible" />
+                        <Setter Target="MenuBar.DefaultLabelPosition" Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
-        <Grid x:Name="AppTitleBarWrapper">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel x:Name="AppTitleBar" Grid.Column="0" Orientation="Horizontal">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8B9;"
-                      HorizontalAlignment="Left" VerticalAlignment="Center"
-                      Width="20" Height="20" Margin="8,0" />
-                <TextBlock Text="{x:Bind Title}"
-                           VerticalAlignment="Center"
-                           Style="{ThemeResource BaseTextBlockStyle}" />
+        <Border x:Name="AppTitleBar"
+                IsHitTestVisible="True"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                Height="40"
+                Canvas.ZIndex="1"
+                Margin="48,8,0,0">
+            <StackPanel Orientation="Horizontal">
+                <FontIcon Glyph="&#xE8B9;"
+                          FontFamily="{StaticResource SymbolThemeFontFamily}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                          FontSize="16"
+                          Width="16"
+                          Height="16"/>
+                <TextBlock x:Name="AppTitle"
+                    Text="{x:Bind viewModel.Title, Mode=OneWay}"
+                    VerticalAlignment="Center"
+                    Margin="12,0,0,0"
+                    Style="{ThemeResource CaptionTextBlockStyle}" />
             </StackPanel>
-            <!--<Button x:Name="Menu" Grid.Column="0"
-                    HorizontalAlignment="Left" VerticalAlignment="Center"
-                    Click="Menu_Click">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
-            </Button>-->
-        </Grid>
+        </Border>
 
-        <CommandBar Grid.Row="1" OverflowButtonVisibility="Collapsed">
-            <CommandBar.Content>
-                <StackPanel Orientation="Horizontal">
-                    <AppBarButton x:Name="CommandMenu" Click="Menu_Click" Visibility="Collapsed">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
-                    </AppBarButton>
-                    <TextBlock x:Name="FolderHeader"
-                               Text="{x:Bind viewModel.CurrentFolder.DisplayName, Mode=OneWay}"
-                               Style="{ThemeResource SubheaderTextBlockStyle}"
-                               Margin="12,0,0,0"
-                               TextTrimming="CharacterEllipsis"
-                               MaxWidth="300"
-                               MaxLines="1">
-                        <TextBlock.ContextFlyout>
-                            <Flyout Placement="Right">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBox x:Name="PathBox" Header="Path" MinWidth="300" MaxLength="255" Text="{x:Bind viewModel.CurrentFolder.Path, Mode=OneWay}" TextChanged="PathBox_TextChanged" KeyUp="PathBox_KeyUp" />
-                                    <Button x:Name="PathButton" Content="Go" Margin="8,0,0,0" VerticalAlignment="Bottom" Click="PathButton_Click" IsEnabled="False" />
-                                </StackPanel>
-                            </Flyout>
-                        </TextBlock.ContextFlyout>
-                    </TextBlock>
-                </StackPanel>
-            </CommandBar.Content>
+        <!--<MenuBar Grid.Row="1">
+            <MenuBarItem Title="File">
+                <MenuFlyoutItem x:Name="OpenFolder" Text="Open" Click="PickFolderButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="OpenFolderQuickly" Text="Open Quickly" Click="OpenFolderQuickly_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="O" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSubItem x:Name="RefreshButton" Text="Refresh">
+                    <MenuFlyoutItem x:Name="RefreshFilesButton" Text="Refresh Files" Click="RefreshFilesButton_Click">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE8B9;" />
+                        </MenuFlyoutItem.Icon>
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="R" />
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem x:Name="RefreshCategoriesButton" Text="Refresh Categories" Click="RefreshCategoriesButton_Click">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE8B7;" />
+                        </MenuFlyoutItem.Icon>
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="R" />
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                </MenuFlyoutSubItem>
+                <MenuFlyoutItem x:Name="ExitMenuItem" Text="Exit" Click="ExitMenuItem_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Q" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+
+            <MenuBarItem Title="Edit">
+                <MenuFlyoutItem x:Name="UndoButton" Text="Undo" Click="Undo" IsEnabled="False">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Z" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="RedoButton" Text="Redo" Click="Redo" IsEnabled="False">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Y" />
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="Z" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+
+            <MenuBarItem x:Name="FilterMenu" Title="Filter">
+                <ToggleMenuFlyoutItem Text="PNG" Tag=".png" Click="ToggleMenuFlyoutItem_Click" />
+                <ToggleMenuFlyoutItem Text="JPEG" Tag=".jpg" Click="ToggleMenuFlyoutItem_Click" />
+                <ToggleMenuFlyoutItem Text="GIF" Tag=".gif" Click="ToggleMenuFlyoutItem_Click" />
+                <MenuFlyoutSeparator />
+                <ToggleMenuFlyoutItem Text="HEIF" Tag=".heif" Click="ToggleMenuFlyoutItem_Click" />
+                <ToggleMenuFlyoutItem Text="JPEG-XR" Tag=".jxr" Click="ToggleMenuFlyoutItem_Click" />
+            </MenuBarItem>
+
+            <MenuBarItem x:Name="ConvertMenu" Title="Convert">
+                <MenuFlyoutItem Text="PNG" Tag="PNG" Click="ConvertOption_Click" />
+                <MenuFlyoutItem Text="JPEG" Tag="JPEG" Click="ConvertOption_Click" />
+                <MenuFlyoutItem Text="GIF" Tag="GIF" Click="ConvertOption_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="HEIF" Tag="HEIF" Click="ConvertOption_Click" />
+                <MenuFlyoutItem Text="JPEG-XR" Tag="JXR" Click="ConvertOption_Click" />
+            </MenuBarItem>
+
+            <MenuBarItem Title="Help">
+                <ToggleMenuFlyoutItem x:Name="UseIndexer" Text="Use Search Indexer" IsChecked="{x:Bind viewModel.UseSearchIndexer, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem x:Name="TitlebarOpt" Text="Use Custom Titlebar" IsChecked="{x:Bind viewModel.UseTitlebar, Mode=TwoWay}" />
+                <MenuFlyoutItem x:Name="ResetDialogs" Text="Reset Dialogs" Click="ResetDialogs_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="AboutItem" Text="About" Click="AboutItem_Click" />
+            </MenuBarItem>
+        </MenuBar>-->
+
+        <CommandBar x:Name="MenuBar" Grid.Row="1" OverflowButtonVisibility="Collapsed">
             <CommandBar.PrimaryCommands>
-                <AppBarButton Label="Open" Click="PickFolderButton_Click">
+                <AppBarButton x:Name="CommandMenu" Click="Menu_Click" Visibility="Collapsed" ToolTipService.ToolTip="Toggle File List" ToolTipService.Placement="Bottom">
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
+                </AppBarButton>
+                <AppBarButton x:Name="PickFolderButton" Label="Open" ToolTipService.ToolTip="Open" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8DA;" />
                     </AppBarButton.Icon>
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="O" />
-                    </AppBarButton.KeyboardAccelerators>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem x:Name="OpenFolder" Text="Open" Click="PickFolderButton_Click">
+                                <MenuFlyoutItem.KeyboardAccelerators>
+                                    <KeyboardAccelerator Modifiers="Control" Key="O" />
+                                </MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="OpenFolderQuickly" Text="Open Quickly" Click="OpenFolderQuickly_Click">
+                                <MenuFlyoutItem.KeyboardAccelerators>
+                                    <KeyboardAccelerator Modifiers="Control,Shift" Key="O" />
+                                </MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton Label="Filter" ToolTipService.ToolTip="Filter">
+                <AppBarButton Label="Filter" ToolTipService.ToolTip="Filter" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE71C;" />
                     </AppBarButton.Icon>
@@ -112,7 +198,7 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Name="RefreshButton" Label="Refresh" ToolTipService.ToolTip="Refresh" IsEnabled="False">
+                <AppBarButton x:Name="RefreshButton" Label="Refresh" ToolTipService.ToolTip="Refresh" ToolTipService.Placement="Bottom" IsEnabled="False">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72C;" />
                     </AppBarButton.Icon>
@@ -138,7 +224,7 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Name="NewCategoryButton" Label="New Category" IsEnabled="False">
+                <AppBarButton x:Name="NewCategoryButton" Label="New Category" IsEnabled="False" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F4;" />
                     </AppBarButton.Icon>
@@ -154,7 +240,7 @@
                         </Flyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton x:Name="ConvertButton" Label="Convert" ToolTipService.ToolTip="Convert" IsEnabled="False">
+                <AppBarButton x:Name="ConvertButton" Label="Convert" ToolTipService.ToolTip="Convert" IsEnabled="False" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE895;" />
                     </AppBarButton.Icon>
@@ -170,7 +256,7 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Name="UndoButton" Label="Undo" Click="Undo" IsEnabled="False">
+                <AppBarButton x:Name="UndoButton" Label="Undo" Click="Undo" IsEnabled="False" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7A7;" />
                     </AppBarButton.Icon>
@@ -178,7 +264,7 @@
                         <KeyboardAccelerator Modifiers="Control" Key="Z" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton x:Name="RedoButton" Label="Redo" Click="Redo" IsEnabled="False">
+                <AppBarButton x:Name="RedoButton" Label="Redo" Click="Redo" IsEnabled="False" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7A6;" />
                     </AppBarButton.Icon>
@@ -187,7 +273,7 @@
                         <KeyboardAccelerator Modifiers="Control,Shift" Key="Z" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton x:Name="SettingsButton" Label="Settings" ToolTipService.ToolTip="Settings">
+                <AppBarButton x:Name="SettingsButton" Label="Settings" ToolTipService.ToolTip="Settings" ToolTipService.Placement="Bottom">
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE713;" />
                     </AppBarButton.Icon>
@@ -196,6 +282,7 @@
                             <ToggleMenuFlyoutItem x:Name="UseIndexer" Text="Use Search Indexer" IsChecked="{x:Bind viewModel.UseSearchIndexer, Mode=TwoWay}" />
                             <ToggleMenuFlyoutItem x:Name="TitlebarOpt" Text="Use Custom Titlebar" IsChecked="{x:Bind viewModel.UseTitlebar, Mode=TwoWay}" />
                             <MenuFlyoutItem x:Name="ResetDialogs" Text="Reset Dialogs" Click="ResetDialogs_Click" />
+                            <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Name="AboutItem" Text="About" Click="AboutItem_Click" />
                         </MenuFlyout>
                     </AppBarButton.Flyout>
@@ -214,9 +301,13 @@
                           VerticalAlignment="Stretch"
                           SelectionChanged="FileList_SelectionChanged"
                           ItemsSource="{x:Bind viewModel.CurrentFiles, Mode=OneWay}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                        </Style>
+                    </ListView.ItemContainerStyle>
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="ws:StorageFile">
-                            <Grid Margin="0,12" AutomationProperties.Name="{x:Bind DisplayName}" ToolTipService.ToolTip="{x:Bind DisplayName}">
+                            <Grid Margin="12" AutomationProperties.Name="{x:Bind DisplayName}" ToolTipService.ToolTip="{x:Bind DisplayName}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -233,17 +324,21 @@
             </SplitView.Pane>
 
             <SplitView.Content>
-                <Grid>
+                <Grid Margin="24,12,12,12">
                     <Grid.RowDefinitions>
                         <RowDefinition />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Border Background="{StaticResource SystemControlAcrylicElementBrush}"
-                            Grid.Row="0" Margin="12,12,12,0"
+                    <Border x:Name="ImageBorder"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            Grid.Row="0" Margin="0"
+                            Shadow="{StaticResource SharedThemeShadow}"
                             VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                            CornerRadius="8" BorderThickness="1"
+                            CornerRadius="8"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             PointerEntered="ImagePreview_PointerEntered" PointerExited="ImagePreview_PointerExited">
-                        <SplitView x:Name="ImageSplit" DisplayMode="Overlay" IsPaneOpen="False" PanePlacement="Right" PaneBackground="{ThemeResource SystemControlAcrylicElementBrush}">
+                        <SplitView x:Name="ImageSplit" DisplayMode="Overlay" IsPaneOpen="False" PanePlacement="Right">
                             <SplitView.Content>
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -268,8 +363,9 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <FontIcon x:Name="NotificationBoxIcon" Grid.Column="0"
-                                              FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE7BA;"
-                                              Foreground="Yellow" VerticalAlignment="Center" />
+                                                      FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                      Glyph="&#xE7BA;"
+                                                      Foreground="Yellow" VerticalAlignment="Center" />
                                             <TextBlock x:Name="NotificationBoxText" Grid.Column="1" Padding="8,0,0,0" VerticalAlignment="Center" />
                                             <Button x:Name="NotifCloseButton" Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Click="NotifCloseButton_Click">
                                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8BB;" />
@@ -277,7 +373,11 @@
                                         </Grid>
                                     </Border>
                                     <Image x:Name="ImagePreview" Grid.RowSpan="3" Grid.ColumnSpan="2" Margin="8" Stretch="Uniform" Source="{x:Bind viewModel.CurrentFile.Path, Mode=OneWay}" />
-                                    <CommandBar x:Name="ImageInfoBar" Visibility="Collapsed" IsOpen="False" DefaultLabelPosition="Right" Grid.Row="2" Grid.Column="1" Canvas.ZIndex="1">
+                                    <CommandBar x:Name="ImageInfoBar"
+                                                Visibility="Collapsed" IsOpen="False"
+                                                DefaultLabelPosition="Right"
+                                                Grid.Row="2" Grid.Column="1" Canvas.ZIndex="1"
+                                                Background="{ThemeResource SystemControlAcrylicElementBrush}" CornerRadius="4">
                                         <AppBarButton x:Name="ImageInfoButton" Label="Info" Click="ImageInfoButton_Click">
                                             <AppBarButton.Icon>
                                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE946;" />
@@ -331,20 +431,36 @@
                     <GridView x:Name="CategoryGrid"
                               Grid.Row="1"
                               VerticalAlignment="Bottom"
-                              Margin="0,8,0,0"
-                              Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                              Margin="0,12,0,0"
+                              CornerRadius="8"
+                              BorderThickness="1"
+                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                              Background="{ThemeResource LayerFillColorDefaultBrush}"
+                              Shadow="{StaticResource SharedThemeShadow}"
                               MinWidth="400" MaxHeight="100"
                               SelectionMode="None" IsItemClickEnabled="True"
                               CanDragItems="False" AllowDrop="False"
                               FlowDirection="LeftToRight"
                               ItemClick="CategoryGrid_ItemClick"
                               ItemsSource="{x:Bind viewModel.Categories, Mode=OneWay}">
+                        <GridView.ItemContainerStyle>
+                            <Style TargetType="GridViewItem">
+                                <Setter Property="Margin" Value="5"/>
+                                <Setter Property="Padding" Value="8" />
+                                <Setter Property="Background" Value="{ThemeResource SystemControlAcrylicElementBrush}" />
+                                <Setter Property="CornerRadius" Value="4" />
+                            </Style>
+                        </GridView.ItemContainerStyle>
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid HorizontalAlignment="Center" MaximumRowsOrColumns="9" Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="ws:StorageFolder">
-                                <StackPanel Width = '200' Orientation = 'Horizontal' Margin="8">
-                                    <TextBlock Style = '{ThemeResource BodyTextBlockStyle}' Margin = '12,0,12,0' Text = '{x:Bind DisplayName}'
-                                       TextTrimming="CharacterEllipsis" MaxLines="1" MaxWidth="200" />
-                                </StackPanel>
+                                <TextBlock Style="{ThemeResource BodyTextBlockStyle}"
+                                           Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" MaxWidth="200" />
                             </DataTemplate>
                         </GridView.ItemTemplate>
                     </GridView>

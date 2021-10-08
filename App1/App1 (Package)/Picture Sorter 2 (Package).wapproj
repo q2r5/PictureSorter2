@@ -38,7 +38,7 @@
     <ProjectGuid>54f4bd79-56f6-4395-b93f-4971d960d409</ProjectGuid>
     <TargetPlatformVersion>10.0.22000.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
-    <AssetTargetFallback>net5.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
+    <AssetTargetFallback>net6.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
@@ -92,7 +92,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-preview1">
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-preview2">
       <IncludeAssets>build</IncludeAssets>
     </PackageReference>
   </ItemGroup>

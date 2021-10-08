@@ -18,7 +18,7 @@
     <ContentDialog.TitleTemplate>
         <DataTemplate>
             <StackPanel Orientation="Horizontal">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7BA;" Width="40" Height="40" Margin="10,0"/>
+                <FontIcon Glyph="&#xE7BA;" Width="40" Height="40" Margin="10,0"/>
                 <TextBlock Text="Oops."/>
             </StackPanel>
         </DataTemplate>

@@ -22,6 +22,26 @@ namespace App1
         #region Variables
         private readonly ApplicationDataContainer appData = ApplicationData.Current.LocalSettings;
 
+        private readonly string AppTitle = "(New) Picture Sorter";
+        public string Title {
+            get => _title;
+            set
+            {
+                string newTitle;
+                if (value != null)
+                {
+                    newTitle = value + " - " + AppTitle;
+                }
+                else
+                {
+                    newTitle = AppTitle;
+                }
+
+                _ = SetProperty(ref _title, newTitle);
+            }
+        }
+        private string _title = "(New) Picture Sorter";
+
         public StorageFolder CurrentFolder
         {
             get => _currentFolder;
@@ -35,6 +55,7 @@ namespace App1
                     {
                         (App.CurrentWindow.ContentFrame.Content as MainPage).FolderChanged();
                     }
+                    Title = value.DisplayName;
                     GetFiles(value, true);
                     GetFolders(value);
                 }

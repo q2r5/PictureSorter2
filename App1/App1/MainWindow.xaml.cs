@@ -15,16 +15,6 @@ namespace App1
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        // For the simplicity of this code snippet we import the DLL and declare
-        // the methods in the MainWindow class here. It is recommended that you
-        // break this out into a support class that you use wherever needed instead.
-        // See the Windows App SDK windowing sample for more details.
-        [DllImport("Microsoft.Internal.FrameworkUdk.dll", EntryPoint = "Windowing_GetWindowHandleFromWindowId", CharSet = CharSet.Unicode)]
-        private static extern IntPtr GetWindowHandleFromWindowId(WindowId windowId, out IntPtr result);
-
-        [DllImport("Microsoft.Internal.FrameworkUdk.dll", EntryPoint = "Windowing_GetWindowIdFromWindowHandle", CharSet = CharSet.Unicode)]
-        private static extern IntPtr GetWindowIdFromWindowHandle(IntPtr hwnd, out WindowId result);
-
         public readonly AppWindow m_appWindow;
 
         public MainWindow()
@@ -35,7 +25,7 @@ namespace App1
             if (m_appWindow != null)
             {
                 // You now have an AppWindow object and can call its methods to manipulate the window.
-                if (AppWindowTitleBar.IsCustomizationsSupported())
+                if (AppWindowTitleBar.IsCustomizationSupported())
                 {
                 }
             }
@@ -44,7 +34,7 @@ namespace App1
         private AppWindow GetAppWindowForCurrentWindow()
         {
             IntPtr hWnd = WindowNative.GetWindowHandle(this);
-            _ = GetWindowIdFromWindowHandle(hWnd, out WindowId myWndId);
+            WindowId myWndId = Win32Interop.GetWindowIdFromWindow(hWnd);
             return AppWindow.GetFromWindowId(myWndId);
         }
     }
