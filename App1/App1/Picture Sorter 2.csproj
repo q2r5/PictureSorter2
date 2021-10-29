@@ -1,23 +1,65 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.22000.0</TargetFramework>
+    <TargetFramework>net6.0-windows10.0.22489.0</TargetFramework>
     <UseWindowsSdkPreview>true</UseWindowsSdkPreview>
-    <WindowsSdkPackageVersion>10.0.22000.168-preview</WindowsSdkPackageVersion>
+    <WindowsSdkPackageVersion>10.0.22489-preview</WindowsSdkPackageVersion>
     <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <RootNamespace>App1</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;arm64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <AppxLogTelemetryFromSideloadingScript>False</AppxLogTelemetryFromSideloadingScript>
+    <PackageCertificateThumbprint>6EB06D4197C04AF910F0F55A68F788FB7D526CC8</PackageCertificateThumbprint>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA512</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxPackageDir>D:\Code\Picture Sorter 2\App1\App1\AppPackages\</AppxPackageDir>
+    <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="AppPackages\**" />
+    <EmbeddedResource Remove="AppPackages\**" />
+    <None Remove="AppPackages\**" />
+    <Page Remove="AppPackages\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="CustomContentDialog.xaml" />
+    <None Remove="Images\LockScreenLogo.scale-200.png" />
+    <None Remove="Images\SplashScreen.scale-200.png" />
+    <None Remove="Images\Square150x150Logo.scale-200.png" />
+    <None Remove="Images\Square44x44Logo.scale-200.png" />
+    <None Remove="Images\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <None Remove="Images\StoreLogo.png" />
+    <None Remove="Images\Wide310x150Logo.scale-200.png" />
     <None Remove="MainWindow.xaml" />
+    <None Remove="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Images\LockScreenLogo.scale-200.png" />
+    <Content Include="Images\SplashScreen.scale-200.png" />
+    <Content Include="Images\Square150x150Logo.scale-200.png" />
+    <Content Include="Images\Square44x44Logo.scale-200.png" />
+    <Content Include="Images\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Images\StoreLogo.png" />
+    <Content Include="Images\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-preview2" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-preview3" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
@@ -37,5 +79,9 @@
     <Page Update="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PRIResource Remove="AppPackages\**" />
   </ItemGroup>
 </Project>

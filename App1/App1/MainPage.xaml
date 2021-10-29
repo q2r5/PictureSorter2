@@ -63,7 +63,7 @@
                 Background="Transparent"
                 Height="40"
                 Canvas.ZIndex="1"
-                Margin="48,8,0,0">
+                Margin="16,0,0,0">
             <StackPanel Orientation="Horizontal">
                 <FontIcon Glyph="&#xE8B9;"
                           FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -332,13 +332,13 @@
                     <Border x:Name="ImageBorder"
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             Grid.Row="0" Margin="0"
-                            Shadow="{StaticResource SharedThemeShadow}"
+                            Shadow="{ThemeResource SharedThemeShadow}"
                             VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                             CornerRadius="8"
                             BorderThickness="1"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             PointerEntered="ImagePreview_PointerEntered" PointerExited="ImagePreview_PointerExited">
-                        <SplitView x:Name="ImageSplit" DisplayMode="Overlay" IsPaneOpen="False" PanePlacement="Right">
+                        <SplitView x:Name="ImageSplit" DisplayMode="Overlay" IsPaneOpen="False" PanePlacement="Right" PaneBackground="{ThemeResource SystemControlAcrylicElementBrush}">
                             <SplitView.Content>
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -405,7 +405,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="{x:Bind viewModel.CurrentFile.DisplayName, Mode=OneWay}" x:Name="PaneHeader" HorizontalTextAlignment="Center" Padding="12,8" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                    <TextBlock Text="{x:Bind viewModel.CurrentFile.DisplayName, Mode=OneWay}" x:Name="PaneHeader" HorizontalTextAlignment="Center" Padding="12,8" Style="{ThemeResource SubtitleTextBlockStyle}"/>
                                     <ItemsControl x:Name="StaticInfoList" Grid.Row="1">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
