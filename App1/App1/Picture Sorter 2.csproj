@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.22489.0</TargetFramework>
+    <TargetFramework>net6.0-windows10.0.22504.0</TargetFramework>
     <UseWindowsSdkPreview>true</UseWindowsSdkPreview>
-    <WindowsSdkPackageVersion>10.0.22489-preview</WindowsSdkPackageVersion>
+    <WindowsSdkPackageVersion>10.0.22504-preview</WindowsSdkPackageVersion>
     <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <RootNamespace>App1</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -21,7 +21,7 @@
     <AppxPackageDir>D:\Code\Picture Sorter 2\App1\App1\AppPackages\</AppxPackageDir>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
-    <AppxBundle>Never</AppxBundle>
+    <AppxBundle>Auto</AppxBundle>
     <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
@@ -59,7 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-preview3" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 

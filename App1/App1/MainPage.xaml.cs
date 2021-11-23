@@ -482,11 +482,10 @@ namespace App1
             };
             versionInfo.Children.Add(new TextBlock()
             {
-                Text = string.Format("Version: {0}.{1}.{2}.{3}",
+                Text = string.Format("Version: {0}.{1}.{2}",
                     Package.Current.Id.Version.Major,
                     Package.Current.Id.Version.Minor,
-                    Package.Current.Id.Version.Build,
-                    Package.Current.Id.Version.Revision)
+                    Package.Current.Id.Version.Build)
             });
             aboutDialog.Content = versionInfo;
 
